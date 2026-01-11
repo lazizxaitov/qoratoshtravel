@@ -1,0 +1,88 @@
+import { NextResponse } from "next/server";
+import ensureDatabase from "../../../lib/db";
+
+export const runtime = "nodejs";
+
+function normalizeDate(value: string | null) {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const destination = searchParams.get("destination")?.trim() || "";
+  const startDate = normalizeDate(searchParams.get("startDate"));
+  const endDate = normalizeDate(searchParams.get("endDate"));
+  const adults = Number(searchParams.get("adults") || 0);
+  const type = searchParams.get("type")?.trim() || "";
+
+  const filters: string[] = [];
+  const params: Record<string, string | number> = {};
+
+  if (destination) {
+    filters.push(
+      "(title LIKE @destination OR country LIKE @destination OR city LIKE @destination)"
+    );
+    params.destination = `%${destination}%`;
+  }
+
+  if (startDate && endDate) {
+    filters.push("(start_date <= @startDate AND end_date >= @endDate)");
+    params.startDate = startDate;
+    params.endDate = endDate;
+  } else if (startDate) {
+    filters.push("(end_date >= @startDate)");
+    params.startDate = startDate;
+  }
+
+  if (adults > 0) {
+    filters.push("(adults_min <= @adults AND adults_max >= @adults)");
+    params.adults = adults;
+  }
+
+  if (type && type !== "all") {
+    if (type === "hot") {
+      filters.push("(tour_type = 'hot' OR is_hot = 1)");
+    } else {
+      filters.push("tour_type = @type");
+      params.type = type;
+    }
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+  const db = ensureDatabase();
+  const stmt = db.prepare(
+    `
+      SELECT id, title, country, city, start_date, end_date, adults_min, adults_max,
+             price_from, nights, image_url, is_hot, tour_type, gallery_json
+      FROM tours
+      ${whereClause}
+      ORDER BY is_hot DESC, start_date ASC
+      LIMIT 50;
+    `
+  );
+  const rows = stmt.all(params);
+
+  const items = rows.map((row: any) => {
+    let gallery_urls: string[] = [];
+    if (row.gallery_json) {
+      try {
+        const parsed = JSON.parse(row.gallery_json);
+        if (Array.isArray(parsed)) {
+          gallery_urls = parsed;
+        }
+      } catch {
+        gallery_urls = [];
+      }
+    }
+    return { ...row, gallery_urls };
+  });
+
+  return NextResponse.json({ items });
+}
