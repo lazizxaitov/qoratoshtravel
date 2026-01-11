@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
 
-type DbInstance = Database.Database;
+type DbInstance = InstanceType<typeof Database>;
 
 let dbInstance: DbInstance | null = null;
 
@@ -36,7 +36,7 @@ function ensureDatabase(): DbInstance {
   const existingColumns = db
     .prepare("PRAGMA table_info(tours)")
     .all()
-    .map((row: { name: string }) => row.name);
+    .map((row) => (row as { name: string }).name);
 
   if (!existingColumns.includes("tour_type")) {
     db.exec("ALTER TABLE tours ADD COLUMN tour_type TEXT NOT NULL DEFAULT 'regular';");
@@ -60,7 +60,7 @@ function ensureDatabase(): DbInstance {
   const typeColumns = db
     .prepare("PRAGMA table_info(tour_types)")
     .all()
-    .map((row: { name: string }) => row.name);
+    .map((row) => (row as { name: string }).name);
   if (!typeColumns.includes("label_en")) {
     db.exec("ALTER TABLE tour_types ADD COLUMN label_en TEXT NOT NULL DEFAULT '';");
     db.prepare("UPDATE tour_types SET label_en = label_ru WHERE label_en = '';").run();
