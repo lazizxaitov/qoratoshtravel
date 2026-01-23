@@ -78,6 +78,7 @@ export const content = {
       destinationPlaceholder: "Шарм-эль-Шейх",
       peopleLabel: "Персон",
       peopleValue: "2 взрослых",
+      peopleUnit: "чел.",
       adultsLabel: "Количество",
       startLabel: "Заезд",
       endLabel: "Выезд",
@@ -209,6 +210,7 @@ export const content = {
         city: "Египет",
         price: "от 900$",
         days: "7 ночей",
+        people: "1-4",
         image:
           "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
       },
@@ -218,6 +220,7 @@ export const content = {
         city: "Турция",
         price: "от 520$",
         days: "4 ночи",
+        people: "1-3",
         image:
           "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
       },
@@ -227,6 +230,7 @@ export const content = {
         city: "ОАЭ",
         price: "от 1200$",
         days: "6 ночей",
+        people: "2-6",
         image:
           "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
       },
@@ -238,6 +242,7 @@ export const content = {
         city: "Турция",
         price: "от 430$",
         badge: "Горящий тур",
+        people: "2-4",
       },
       {
         id: "bali",
@@ -245,6 +250,7 @@ export const content = {
         city: "Индонезия",
         price: "от 1490$",
         badge: "Лимитировано",
+        people: "2-4",
       },
       {
         id: "prague",
@@ -252,6 +258,7 @@ export const content = {
         city: "Чехия",
         price: "от 610$",
         badge: "Осенний хит",
+        people: "1-3",
       },
     ],
     reviewsList: [
@@ -347,6 +354,7 @@ export const content = {
       destinationPlaceholder: "Sharm el-Sheyx",
       peopleLabel: "Mehmonlar",
       peopleValue: "2 kattalar",
+      peopleUnit: "kishi",
       adultsLabel: "Miqdor",
       startLabel: "Kirish",
       endLabel: "Chiqish",
@@ -477,6 +485,7 @@ export const content = {
         city: "Misr",
         price: "900$ dan",
         days: "7 kecha",
+        people: "1-4",
         image:
           "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
       },
@@ -486,6 +495,7 @@ export const content = {
         city: "Turkiya",
         price: "520$ dan",
         days: "4 kecha",
+        people: "1-3",
         image:
           "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
       },
@@ -495,6 +505,7 @@ export const content = {
         city: "BAA",
         price: "1200$ dan",
         days: "6 kecha",
+        people: "2-6",
         image:
           "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
       },
@@ -506,6 +517,7 @@ export const content = {
         city: "Turkiya",
         price: "430$ dan",
         badge: "Issiq tur",
+        people: "2-4",
       },
       {
         id: "bali",
@@ -513,6 +525,7 @@ export const content = {
         city: "Indoneziya",
         price: "1490$ dan",
         badge: "Cheklangan",
+        people: "2-4",
       },
       {
         id: "prague",
@@ -520,6 +533,7 @@ export const content = {
         city: "Chexiya",
         price: "610$ dan",
         badge: "Kuzgi hit",
+        people: "1-3",
       },
     ],
     reviewsList: [
@@ -608,6 +622,7 @@ export const content = {
       destinationPlaceholder: "Sharm El Sheikh",
       peopleLabel: "Guests",
       peopleValue: "2 adults",
+      peopleUnit: "people",
       adultsLabel: "Travelers",
       startLabel: "Check-in",
       endLabel: "Check-out",
@@ -738,6 +753,7 @@ export const content = {
         city: "Egypt",
         price: "from $900",
         days: "7 nights",
+        people: "1-4",
         image:
           "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
       },
@@ -747,6 +763,7 @@ export const content = {
         city: "Turkey",
         price: "from $520",
         days: "4 nights",
+        people: "1-3",
         image:
           "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
       },
@@ -756,6 +773,7 @@ export const content = {
         city: "UAE",
         price: "from $1200",
         days: "6 nights",
+        people: "2-6",
         image:
           "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
       },
@@ -767,6 +785,7 @@ export const content = {
         city: "Turkey",
         price: "from $430",
         badge: "Hot deal",
+        people: "2-4",
       },
       {
         id: "bali",
@@ -774,6 +793,7 @@ export const content = {
         city: "Indonesia",
         price: "from $1490",
         badge: "Limited",
+        people: "2-4",
       },
       {
         id: "prague",
@@ -781,6 +801,7 @@ export const content = {
         city: "Czechia",
         price: "from $610",
         badge: "Autumn hit",
+        people: "1-3",
       },
     ],
     reviewsList: [

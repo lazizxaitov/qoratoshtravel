@@ -23,6 +23,7 @@ export default function DestinationsPage() {
   );
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
   const locale = contentData[lang];
+  const peopleUnit = locale.search.peopleUnit ?? "";
   useEffect(() => {
     const saved = window.localStorage.getItem("qoratosh-lang");
     if (
@@ -270,6 +271,11 @@ export default function DestinationsPage() {
                   <div className="font-display text-2xl font-semibold text-[var(--ink-900)]">
                     {tour.title}
                   </div>
+                  {tour.people ? (
+                    <div className="text-xs text-[var(--ink-600)]">
+                      {locale.search.peopleLabel}: {tour.people} {peopleUnit}
+                    </div>
+                  ) : null}
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-semibold text-[var(--brand-700)]">
                       {tour.price}

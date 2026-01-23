@@ -13,6 +13,7 @@ export default function TourPage() {
   const params = useParams<{ id: string }>();
   const tourId = params?.id ?? "";
   const locale = contentData[lang];
+  const peopleUnit = locale.search.peopleUnit ?? "";
   useEffect(() => {
     const saved = window.localStorage.getItem("qoratosh-lang");
     if (
@@ -43,6 +44,7 @@ export default function TourPage() {
   const price = tour.fromTours?.price ?? tour.fromHot?.price ?? "";
   const daysLabel = tour.fromTours?.days ?? "";
   const image = tour.fromTours?.image ?? locale.hero.image;
+  const people = tour.fromTours?.people ?? tour.fromHot?.people ?? "";
   const gallery = useMemo(() => {
     const images = [
       image,
@@ -213,6 +215,11 @@ export default function TourPage() {
                     {price}
                   </span>
                 )}
+                {people && (
+                  <span className="rounded-full bg-white/20 px-3 py-1">
+                    {locale.search.peopleLabel}: {people} {peopleUnit}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -235,6 +242,11 @@ export default function TourPage() {
               {city && <div>{city}</div>}
               {daysLabel && <div>{daysLabel}</div>}
               {price && <div>{price}</div>}
+              {people && (
+                <div>
+                  {locale.search.peopleLabel}: {people} {peopleUnit}
+                </div>
+              )}
             </div>
             <a
               href="/contacts"

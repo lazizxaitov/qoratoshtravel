@@ -40,6 +40,9 @@ type TourResult = {
   gallery_urls?: string[];
 };
 
+const formatPeopleRange = (min: number, max: number) =>
+  min === max ? `${min}` : `${min}-${max}`;
+
 export default function Home() {
   const contentData = useContent();
   const [lang, setLang] = useState<Lang>(defaultLang);
@@ -152,6 +155,25 @@ export default function Home() {
   }, []);
 
   const locale = contentData[lang] ?? contentData[defaultLang];
+  const defaultGallery = [
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1473625247510-8ceb1760943f?q=80&w=1200&auto=format&fit=crop",
+  ];
+  const galleryItems = Array.isArray(locale?.gallery?.images)
+    ? locale.gallery.images.filter((item: string) => Boolean(item))
+    : [];
+  const galleryList = galleryItems.length ? galleryItems : defaultGallery;
+  const galleryRows = [
+    galleryList.slice(0, 4),
+    galleryList.slice(4, 8),
+  ];
+  const peopleUnit = locale.search.peopleUnit ?? "";
   const dateFormatter = new Intl.DateTimeFormat(
     lang === "ru" ? "ru-RU" : lang === "uz" ? "uz-UZ" : "en-US",
     { day: "2-digit", month: "short" }
@@ -688,6 +710,11 @@ export default function Home() {
                           <div className="mt-1 text-xs text-[var(--ink-700)]">
                             {formatDate(tour.start_date)} - {formatDate(tour.end_date)}
                           </div>
+                          <div className="mt-1 text-xs text-[var(--ink-600)]">
+                            {locale.search.peopleLabel}:{" "}
+                            {formatPeopleRange(tour.adults_min, tour.adults_max)}{" "}
+                            {peopleUnit}
+                          </div>
                         </div>
                         <div className="mt-2 flex items-center justify-between text-sm">
                           <span className="font-semibold text-[var(--brand-700)]">
@@ -859,6 +886,11 @@ export default function Home() {
                     <div className="font-display text-xl font-semibold text-[var(--ink-900)]">
                       {tour.title}
                     </div>
+                    {tour.people ? (
+                      <div className="text-xs text-[var(--ink-600)]">
+                        {locale.search.peopleLabel}: {tour.people} {peopleUnit}
+                      </div>
+                    ) : null}
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-semibold text-[var(--brand-700)]">
                         {tour.price}
@@ -902,6 +934,11 @@ export default function Home() {
                     <div className="text-xs uppercase tracking-[0.08em] text-[var(--ink-700)]">
                       {item.city}
                     </div>
+                    {item.people ? (
+                      <div className="mt-1 text-xs text-[var(--ink-600)]">
+                        {locale.search.peopleLabel}: {item.people} {peopleUnit}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-semibold text-[var(--brand-700)]">
@@ -1092,44 +1129,7 @@ export default function Home() {
         </section>
 
         <section className="mt-16 space-y-4">
-          {[
-            [
-              {
-                src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop",
-                alt: "Море и пляж",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop",
-                alt: "Горные озера",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1200&auto=format&fit=crop",
-                alt: "Город ночью",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
-                alt: "Альпы",
-              },
-            ],
-            [
-              {
-                src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
-                alt: "Курорт",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
-                alt: "Исторический город",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
-                alt: "Панорама города",
-              },
-              {
-                src: "https://images.unsplash.com/photo-1473625247510-8ceb1760943f?q=80&w=1200&auto=format&fit=crop",
-                alt: "Остров",
-              },
-            ],
-          ].map((row, rowIndex) => (
+          {galleryRows.map((row, rowIndex) => (
             <div
               key={`gallery-row-${rowIndex}`}
               className="marquee"
@@ -1142,14 +1142,14 @@ export default function Home() {
                 }}
               >
                 {Array.from({ length: 2 }).flatMap((_, repeatIndex) =>
-                  row.map((item, index) => (
+                  row.map((src, index) => (
                     <div
-                      key={`${repeatIndex}-${item.src}-${index}`}
+                      key={`${repeatIndex}-${src}-${index}`}
                       className="w-64 overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-soft)]"
                     >
                       <img
-                        src={item.src}
-                        alt={item.alt}
+                        src={src}
+                        alt="Gallery"
                         className="h-44 w-full object-cover sm:h-48"
                         loading="lazy"
                       />

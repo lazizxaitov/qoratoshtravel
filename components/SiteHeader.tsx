@@ -35,8 +35,10 @@ export default function SiteHeader({
 }: SiteHeaderProps) {
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerSearchInputRef = useRef<HTMLInputElement | null>(null);
   const langMenuRef = useRef<HTMLDetailsElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const flagSrc = (code: string) => `/${code}.png`;
 
@@ -91,6 +93,22 @@ export default function SiteHeader({
       document.removeEventListener("mousedown", handleLangMenuClose);
   }, [langMenuOpen]);
 
+  useEffect(() => {
+    function handleMobileMenuClose(event: MouseEvent) {
+      if (!mobileMenuOpen || !mobileMenuRef.current) {
+        return;
+      }
+      const target = event.target as Node | null;
+      if (target && !mobileMenuRef.current.contains(target)) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleMobileMenuClose);
+    return () =>
+      document.removeEventListener("mousedown", handleMobileMenuClose);
+  }, [mobileMenuOpen]);
+
   return (
     <header
       ref={headerRef}
@@ -98,7 +116,7 @@ export default function SiteHeader({
         headerScrolled ? "bg-white/80 backdrop-blur shadow-sm" : "bg-white/90"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-6 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
         <a
           href="/"
           className="group flex items-center gap-3 transition hover:opacity-90"
@@ -106,7 +124,7 @@ export default function SiteHeader({
           <img
             src="/logo2.png"
             alt="Qoratosh Travel"
-            className="h-12 w-14 object-contain transition group-hover:scale-[1.02]"
+            className="h-10 w-12 object-contain transition group-hover:scale-[1.02] sm:h-12 sm:w-14"
           />
           <div className="leading-none">
             <div className="font-display text-lg font-semibold text-[var(--brand-700)]">
@@ -221,6 +239,76 @@ export default function SiteHeader({
           <button className="rounded-full bg-[var(--brand-700)] px-6 py-2 text-sm font-semibold text-white shadow">
             {locale.header.contact}
           </button>
+        </div>
+        <div className="ml-auto flex items-center gap-2 lg:hidden">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-[var(--ink-900)]"
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            <svg
+              aria-hidden="true"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M4 7h16M4 12h16M4 17h16"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div
+        ref={mobileMenuRef}
+        className={`lg:hidden ${mobileMenuOpen ? "block" : "hidden"}`}
+      >
+        <div className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6">
+          <div className="rounded-3xl border border-black/5 bg-white p-4 shadow-[var(--shadow-soft)]">
+            <nav className="grid gap-2 text-sm font-medium text-[var(--ink-800)]">
+              <a className="rounded-2xl px-3 py-2 hover:bg-[var(--sand-50)]" href="/destinations">
+                {locale.nav.destinations}
+              </a>
+              <a className="rounded-2xl px-3 py-2 hover:bg-[var(--sand-50)]" href="/hot">
+                {locale.nav.hot}
+              </a>
+              <a className="rounded-2xl px-3 py-2 hover:bg-[var(--sand-50)]" href="/about">
+                {locale.nav.about}
+              </a>
+              <a className="rounded-2xl px-3 py-2 hover:bg-[var(--sand-50)]" href="/contacts">
+                {locale.nav.contacts}
+              </a>
+            </nav>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {(Object.keys(languages) as Lang[]).map((key) => (
+                <button
+                  key={key}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold ${
+                    key === lang
+                      ? "border-[var(--brand-600)] bg-[var(--brand-100)] text-[var(--brand-700)]"
+                      : "border-black/10 bg-white text-[var(--ink-900)]"
+                  }`}
+                  onClick={() => onLangChange(key)}
+                >
+                  <img
+                    src={flagSrc(languages[key].code)}
+                    alt={languages[key].label}
+                    className="h-4 w-6 rounded-sm object-cover"
+                    loading="lazy"
+                  />
+                  {languages[key].label}
+                </button>
+              ))}
+            </div>
+            <button className="mt-4 w-full rounded-full bg-[var(--brand-700)] px-6 py-2 text-sm font-semibold text-white shadow">
+              {locale.header.contact}
+            </button>
+          </div>
         </div>
       </div>
       <div
