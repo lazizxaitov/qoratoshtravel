@@ -119,14 +119,14 @@ export default function SiteHeader({
       <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4">
         <a
           href="/"
-          className="group flex items-center gap-3 transition hover:opacity-90"
+          className="group flex shrink-0 items-center gap-3 transition hover:opacity-90"
         >
           <img
             src="/logo2.png"
             alt="Qoratosh Travel"
             className="h-10 w-12 object-contain transition group-hover:scale-[1.02] sm:h-12 sm:w-14"
           />
-          <div className="leading-none">
+          <div className="hidden leading-none sm:block">
             <div className="font-display text-lg font-semibold text-[var(--brand-700)]">
               Qoratosh
             </div>
@@ -135,7 +135,7 @@ export default function SiteHeader({
             </div>
           </div>
         </a>
-        <nav className="hidden flex-1 items-center justify-center gap-5 text-sm font-medium text-[var(--ink-700)] lg:flex xl:gap-7">
+        <nav className="hidden flex-1 items-center justify-center gap-5 text-sm font-medium text-[var(--ink-700)] md:flex xl:gap-7">
           <a className="hover:text-[var(--brand-700)]" href="/destinations">
             {locale.nav.destinations}
           </a>
@@ -149,7 +149,7 @@ export default function SiteHeader({
             {locale.nav.contacts}
           </a>
         </nav>
-        <div className="ml-auto hidden items-center gap-4 lg:flex">
+        <div className="ml-auto hidden items-center gap-4 md:flex">
           <div className="flex items-center gap-3" data-header-search>
             <button
               type="button"
@@ -240,7 +240,7 @@ export default function SiteHeader({
             {locale.header.contact}
           </button>
         </div>
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex items-center gap-2 md:hidden">
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-[var(--ink-900)]"
@@ -266,7 +266,7 @@ export default function SiteHeader({
       </div>
       <div
         ref={mobileMenuRef}
-        className={`lg:hidden ${mobileMenuOpen ? "block" : "hidden"}`}
+        className={`md:hidden ${mobileMenuOpen ? "block" : "hidden"}`}
       >
         <div className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6">
           <div className="rounded-3xl border border-black/5 bg-white p-4 shadow-[var(--shadow-soft)]">
