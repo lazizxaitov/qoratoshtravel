@@ -6,15 +6,21 @@ type DbInstance = InstanceType<typeof Database>;
 
 let dbInstance: DbInstance | null = null;
 
+function resolveDbPath() {
+  const rawPath = process.env.QORATOSH_DB_PATH ?? "qoratosh.sqlite";
+  return path.isAbsolute(rawPath) ? rawPath : path.join(process.cwd(), rawPath);
+}
+
 function ensureDatabase(): DbInstance {
   if (dbInstance) {
     return dbInstance;
   }
 
-  const dataDir = path.join(process.cwd(), "data");
-  fs.mkdirSync(dataDir, { recursive: true });
-  const dbPath = path.join(dataDir, "tours.db");
+  const dbPath = resolveDbPath();
+  const dbDir = path.dirname(dbPath);
+  fs.mkdirSync(dbDir, { recursive: true });
   const db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS tours (
@@ -29,7 +35,9 @@ function ensureDatabase(): DbInstance {
       price_from INTEGER NOT NULL,
       nights INTEGER NOT NULL,
       image_url TEXT NOT NULL,
-      is_hot INTEGER NOT NULL DEFAULT 0
+      is_hot INTEGER NOT NULL DEFAULT 0,
+      tour_type TEXT NOT NULL DEFAULT 'regular',
+      gallery_urls TEXT NOT NULL DEFAULT '[]'
     );
   `);
 
@@ -41,8 +49,13 @@ function ensureDatabase(): DbInstance {
   if (!existingColumns.includes("tour_type")) {
     db.exec("ALTER TABLE tours ADD COLUMN tour_type TEXT NOT NULL DEFAULT 'regular';");
   }
-  if (!existingColumns.includes("gallery_json")) {
-    db.exec("ALTER TABLE tours ADD COLUMN gallery_json TEXT NOT NULL DEFAULT '[]';");
+  if (!existingColumns.includes("gallery_urls")) {
+    db.exec("ALTER TABLE tours ADD COLUMN gallery_urls TEXT NOT NULL DEFAULT '[]';");
+  }
+  if (existingColumns.includes("gallery_json")) {
+    db.exec(
+      "UPDATE tours SET gallery_urls = gallery_json WHERE gallery_urls = '[]' AND gallery_json != '[]';"
+    );
   }
   db.prepare(
     "UPDATE tours SET tour_type = 'hot' WHERE is_hot = 1 AND tour_type != 'hot';"
@@ -99,77 +112,6 @@ function ensureDatabase(): DbInstance {
       }
     });
     insertManyTypes(seedTypes);
-  }
-
-  const count = db.prepare("SELECT COUNT(1) as count FROM tours").get() as {
-    count: number;
-  };
-  if (count.count === 0) {
-    const insert = db.prepare(`
-      INSERT INTO tours (
-        id, title, country, city, start_date, end_date,
-        adults_min, adults_max, price_from, nights, image_url, is_hot, tour_type
-      ) VALUES (
-        @id, @title, @country, @city, @start_date, @end_date,
-        @adults_min, @adults_max, @price_from, @nights, @image_url, @is_hot, @tour_type
-      );
-    `);
-    const seedTours = [
-      {
-        id: "sharm-2025-10",
-        title: "Шарм-эль-Шейх",
-        country: "Египет",
-        city: "Шарм-эль-Шейх",
-        start_date: "2025-10-12",
-        end_date: "2025-10-19",
-        adults_min: 1,
-        adults_max: 4,
-        price_from: 900,
-        nights: 7,
-        image_url:
-          "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
-        is_hot: 1,
-        tour_type: "hot",
-      },
-      {
-        id: "istanbul-2025-09",
-        title: "Стамбул",
-        country: "Турция",
-        city: "Стамбул",
-        start_date: "2025-09-05",
-        end_date: "2025-09-09",
-        adults_min: 1,
-        adults_max: 3,
-        price_from: 520,
-        nights: 4,
-        image_url:
-          "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
-        is_hot: 0,
-        tour_type: "regular",
-      },
-      {
-        id: "dubai-2025-11",
-        title: "Дубай",
-        country: "ОАЭ",
-        city: "Дубай",
-        start_date: "2025-11-02",
-        end_date: "2025-11-08",
-        adults_min: 2,
-        adults_max: 6,
-        price_from: 1200,
-        nights: 6,
-        image_url:
-          "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
-        is_hot: 1,
-        tour_type: "hot",
-      },
-    ];
-    const insertMany = db.transaction((rows) => {
-      for (const row of rows) {
-        insert.run(row);
-      }
-    });
-    insertMany(seedTours);
   }
 
   dbInstance = db;

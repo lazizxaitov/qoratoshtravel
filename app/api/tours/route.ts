@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const stmt = db.prepare(
     `
       SELECT id, title, country, city, start_date, end_date, adults_min, adults_max,
-             price_from, nights, image_url, is_hot, tour_type, gallery_json
+             price_from, nights, image_url, is_hot, tour_type, gallery_urls
       FROM tours
       ${whereClause}
       ORDER BY is_hot DESC, start_date ASC
@@ -71,9 +71,9 @@ export async function GET(request: Request) {
 
   const items = rows.map((row: any) => {
     let gallery_urls: string[] = [];
-    if (row.gallery_json) {
+    if (row.gallery_urls) {
       try {
-        const parsed = JSON.parse(row.gallery_json);
+        const parsed = JSON.parse(row.gallery_urls);
         if (Array.isArray(parsed)) {
           gallery_urls = parsed;
         }

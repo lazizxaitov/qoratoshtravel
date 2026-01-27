@@ -76,7 +76,7 @@ export async function GET(request: Request) {
     .prepare(
       `
         SELECT id, title, country, city, start_date, end_date, adults_min, adults_max,
-               price_from, nights, image_url, is_hot, tour_type, gallery_json
+               price_from, nights, image_url, is_hot, tour_type, gallery_urls
         FROM tours
         ORDER BY start_date ASC;
       `
@@ -85,9 +85,9 @@ export async function GET(request: Request) {
 
   const items = rows.map((row: any) => {
     let gallery_urls: string[] = [];
-    if (row.gallery_json) {
+    if (row.gallery_urls) {
       try {
-        const parsed = JSON.parse(row.gallery_json);
+        const parsed = JSON.parse(row.gallery_urls);
         if (Array.isArray(parsed)) {
           gallery_urls = parsed;
         }
@@ -119,17 +119,17 @@ export async function POST(request: Request) {
       INSERT INTO tours (
         id, title, country, city, start_date, end_date,
         adults_min, adults_max, price_from, nights, image_url, is_hot,
-        tour_type, gallery_json
+        tour_type, gallery_urls
       ) VALUES (
         @id, @title, @country, @city, @start_date, @end_date,
         @adults_min, @adults_max, @price_from, @nights, @image_url, @is_hot,
-        @tour_type, @gallery_json
+        @tour_type, @gallery_urls
       );
     `
   );
   insert.run({
     ...data,
-    gallery_json: JSON.stringify(data.gallery_urls ?? []),
+    gallery_urls: JSON.stringify(data.gallery_urls ?? []),
   });
   return NextResponse.json({ ok: true });
 }
@@ -162,13 +162,13 @@ export async function PUT(request: Request) {
         image_url = @image_url,
         is_hot = @is_hot,
         tour_type = @tour_type,
-        gallery_json = @gallery_json
+        gallery_urls = @gallery_urls
       WHERE id = @id;
     `
   );
   update.run({
     ...data,
-    gallery_json: JSON.stringify(data.gallery_urls ?? []),
+    gallery_urls: JSON.stringify(data.gallery_urls ?? []),
   });
   return NextResponse.json({ ok: true });
 }
