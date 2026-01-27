@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     langParam === "ru" || langParam === "uz" || langParam === "en"
       ? langParam
       : "";
+  const id = searchParams.get("id")?.trim() || "";
   const destination = searchParams.get("destination")?.trim() || "";
   const startDate = normalizeDate(searchParams.get("startDate"));
   const endDate = normalizeDate(searchParams.get("endDate"));
@@ -39,6 +40,11 @@ export async function GET(request: Request) {
 
   const filters: string[] = [];
   const params: Record<string, string | number> = {};
+
+  if (id) {
+    filters.push("id = @id");
+    params.id = id;
+  }
 
   if (destination) {
     filters.push(

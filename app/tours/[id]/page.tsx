@@ -13,7 +13,15 @@ export default function TourPage() {
   const [lang, setLang] = useState<Lang>(defaultLang);
   const { tours } = useTours(lang);
   const params = useParams<{ id: string }>();
-  const tourId = params?.id ?? "";
+  const rawTourId = params?.id ?? "";
+  const tourId = useMemo(() => {
+    if (!rawTourId) return "";
+    try {
+      return decodeURIComponent(rawTourId);
+    } catch {
+      return rawTourId;
+    }
+  }, [rawTourId]);
   const locale = contentData[lang];
   const [isConsultationOpen, setIsConsultationOpen] = useState(false);
   const [leadForm, setLeadForm] = useState({
@@ -25,6 +33,7 @@ export default function TourPage() {
   const [leadStatus, setLeadStatus] = useState<"idle" | "sending" | "success" | "error">(
     "idle"
   );
+  const [leadErrorDetail, setLeadErrorDetail] = useState("");
   const peopleUnit = locale.search.peopleUnit ?? "";
   const formatPeopleRange = (min: number, max: number) =>
     min === max ? `${min}` : `${min}-${max}`;
@@ -72,8 +81,11 @@ export default function TourPage() {
       return;
     }
     setLeadStatus("sending");
+    setLeadErrorDetail("");
     const tourLink =
-      typeof window !== "undefined" ? window.location.href : undefined;
+      typeof window !== "undefined"
+        ? `${window.location.origin}/tours/${encodeURIComponent(tourId)}`
+        : undefined;
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
@@ -91,6 +103,17 @@ export default function TourPage() {
         }),
       });
       if (!response.ok) {
+        const text = await response.text();
+        let detail = text;
+        try {
+          const data = JSON.parse(text);
+          if (typeof data?.error === "string") {
+            detail = data.error;
+          } else if (typeof data?.message === "string") {
+            detail = data.message;
+          }
+        } catch {}
+        setLeadErrorDetail(detail ? ` (${detail})` : "");
         throw new Error("Request failed");
       }
       setLeadStatus("success");
@@ -105,25 +128,57 @@ export default function TourPage() {
     null
   );
 
-  const tour = useMemo(
-    () => tours.find((item) => item.id === tourId) ?? null,
-    [tours, tourId]
-  );
+  const tour = useMemo(() => {
+    const localTours = (locale.tours as unknown as Array<{
+      id: string;
+      title: string;
+      city: string;
+      price?: string;
+      days?: string;
+      image?: string;
+      people?: string;
+    }>) ?? [];
+    const localHotTours = (locale.hotTours as unknown as Array<{
+      id: string;
+      title: string;
+      city: string;
+      price?: string;
+      badge?: string;
+      people?: string;
+    }>) ?? [];
+    return (
+      tours.find((item) => item.id === tourId) ??
+      localTours.find((item) => item.id === tourId) ??
+      localHotTours.find((item) => item.id === tourId) ??
+      null
+    );
+  }, [locale.hotTours, locale.tours, tourId, tours]);
 
   const title = tour?.title ?? "Tour";
   const city = tour?.city ?? "";
-  const price = tour ? `${locale.search.priceFrom} ${tour.price_from}$` : "";
-  const daysLabel = tour
-    ? `${tour.nights} ${locale.search.nightsLabel}`
-    : "";
-  const image = tour?.image_url ?? locale.hero.image;
-  const people = tour
-    ? formatPeopleRange(tour.adults_min, tour.adults_max)
-    : "";
+  const price =
+    "price_from" in (tour ?? {})
+      ? `${locale.search.priceFrom} ${(tour as { price_from: number }).price_from}$`
+      : (tour as { price?: string } | null)?.price ?? "";
+  const daysLabel =
+    "nights" in (tour ?? {})
+      ? `${(tour as { nights: number }).nights} ${locale.search.nightsLabel}`
+      : (tour as { days?: string } | null)?.days ?? "";
+  const image =
+    "image_url" in (tour ?? {})
+      ? (tour as { image_url: string }).image_url
+      : (tour as { image?: string } | null)?.image ?? locale.hero.image;
+  const people =
+    "adults_min" in (tour ?? {})
+      ? formatPeopleRange(
+          (tour as { adults_min: number }).adults_min,
+          (tour as { adults_max: number }).adults_max
+        )
+      : (tour as { people?: string } | null)?.people ?? "";
   const gallery = useMemo(() => {
     const images = [
       image,
-      ...(tour?.gallery_urls ?? []),
+      ...((tour as { gallery_urls?: string[] } | null)?.gallery_urls ?? []),
       ...locale.hero.slides.map((slide) => slide.image),
     ].filter(Boolean);
     return Array.from(new Set(images));
@@ -147,9 +202,7 @@ export default function TourPage() {
     }
     let isActive = true;
     const controller = new AbortController();
-    const params = new URLSearchParams({
-      destination: title,
-    });
+    const params = new URLSearchParams({ id: tourId });
     params.set("lang", lang);
 
     setTourRange(null);
@@ -533,7 +586,10 @@ export default function TourPage() {
                 </div>
               )}
               {leadStatus === "error" && (
-                <div className="text-sm text-red-600">{leadErrorLabel}</div>
+                <div className="text-sm text-red-600">
+                  {leadErrorLabel}
+                  {leadErrorDetail}
+                </div>
               )}
               <button
                 type="submit"
