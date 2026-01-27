@@ -58,8 +58,7 @@ function buildMessage(payload: LeadPayload) {
     }
   }
 
-  return lines.filter(Boolean).join("
-");
+  return lines.filter(Boolean).join("\n");
 }
 
 export async function POST(request: Request) {
