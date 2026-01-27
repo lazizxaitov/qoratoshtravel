@@ -74,6 +74,21 @@ function normalizeTour(payload: Partial<TourPayload>) {
     errors.push("Missing city");
   }
 
+  const normalizeDate = (value?: string) => {
+    if (!value) {
+      return value;
+    }
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+      const [day, month, year] = value.split(".");
+      return `${year}-${month}-${day}`;
+    }
+    if (/^\d{2}-\d{2}-\d{4}$/.test(value)) {
+      const [day, month, year] = value.split("-");
+      return `${year}-${month}-${day}`;
+    }
+    return value;
+  };
+
   const isHot = payload.is_hot ?? 0;
   const tourType =
     typeof payload.tour_type === "string" && payload.tour_type.length > 0
@@ -104,6 +119,8 @@ function normalizeTour(payload: Partial<TourPayload>) {
       city_ru: payload.city_ru ?? fallbackCity,
       city_uz: payload.city_uz ?? fallbackCity,
       city_en: payload.city_en ?? fallbackCity,
+      start_date: normalizeDate(payload.start_date),
+      end_date: normalizeDate(payload.end_date),
       is_hot: isHot,
       tour_type: tourType,
       gallery_urls: galleryUrls,

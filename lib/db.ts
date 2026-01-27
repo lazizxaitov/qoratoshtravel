@@ -57,6 +57,33 @@ function ensureDatabase(): DbInstance {
       "UPDATE tours SET gallery_urls = gallery_json WHERE gallery_urls = '[]' AND gallery_json != '[]';"
     );
   }
+  const normalizeStoredDate = (value: string) => {
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+      const [day, month, year] = value.split(".");
+      return `${year}-${month}-${day}`;
+    }
+    if (/^\d{2}-\d{2}-\d{4}$/.test(value)) {
+      const [day, month, year] = value.split("-");
+      return `${year}-${month}-${day}`;
+    }
+    return value;
+  };
+  const dateRows = db
+    .prepare("SELECT id, start_date, end_date FROM tours")
+    .all();
+  const updateDates = db.prepare(
+    "UPDATE tours SET start_date = @start_date, end_date = @end_date WHERE id = @id"
+  );
+  const updateDatesTx = db.transaction((rows) => {
+    for (const row of rows as Array<{ id: string; start_date: string; end_date: string }>) {
+      const nextStart = normalizeStoredDate(row.start_date);
+      const nextEnd = normalizeStoredDate(row.end_date);
+      if (nextStart !== row.start_date || nextEnd !== row.end_date) {
+        updateDates.run({ id: row.id, start_date: nextStart, end_date: nextEnd });
+      }
+    }
+  });
+  updateDatesTx(dateRows);
   const localizedColumns = [
     "title_ru",
     "title_uz",
