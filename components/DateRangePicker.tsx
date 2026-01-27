@@ -12,6 +12,7 @@ type DateRangePickerProps = {
   buttonClassName?: string;
   resetLabel?: string;
   availableDates?: Set<string>;
+  highlightDates?: Set<string>;
   onMonthChange?: (viewDate: Date) => void;
 };
 
@@ -47,6 +48,7 @@ export default function DateRangePicker({
   buttonClassName,
   resetLabel = "Reset",
   availableDates,
+  highlightDates,
   onMonthChange,
 }: DateRangePickerProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -186,6 +188,9 @@ export default function DateRangePicker({
               ? !availableDates.has(dayValue)
               : false;
             const isDisabled = isUnavailable;
+            const isHighlighted = highlightDates
+              ? highlightDates.has(dayValue)
+              : false;
 
             return (
               <button
@@ -194,13 +199,15 @@ export default function DateRangePicker({
                 className={`rounded-lg px-2 py-1 ${
                   isSelectedStart || isSelectedEnd
                     ? "bg-[var(--brand-700)] text-white"
-                    : isDisabled
+                  : isDisabled
                     ? "cursor-not-allowed bg-rose-50/70 text-rose-500"
-                    : isInRange
+                  : isHighlighted
                     ? "bg-[var(--brand-100)] text-[var(--brand-700)]"
-                    : isToday
+                  : isInRange
+                    ? "bg-[var(--brand-100)] text-[var(--brand-700)]"
+                  : isToday
                     ? "border border-[var(--brand-700)] text-[var(--brand-700)]"
-                    : "text-[var(--ink-900)] hover:bg-[var(--brand-100)]"
+                  : "text-[var(--ink-900)] hover:bg-[var(--brand-100)]"
                 }`}
                 onClick={() => {
                   if (isDisabled) {

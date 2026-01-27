@@ -52,7 +52,7 @@ export default function Home() {
     destination: "",
     startDate: "",
     endDate: "",
-    adults: "2",
+    adults: "",
     type: "all",
   });
   const [searchResults, setSearchResults] = useState<TourResult[]>([]);
@@ -79,6 +79,9 @@ export default function Home() {
   );
   const [searchTouched, setSearchTouched] = useState(false);
   const [availableDates, setAvailableDates] = useState<Set<string> | null>(
+    null
+  );
+  const [highlightDates, setHighlightDates] = useState<Set<string> | null>(
     null
   );
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
@@ -201,10 +204,13 @@ export default function Home() {
   const destinationOptions: SelectOption[] = Array.from(
     new Set(tours.map((tour) => tour.title))
   ).map((value) => ({ value, label: value }));
-  const adultsSelectOptions: SelectOption[] = adultsOptions.map((value) => ({
-    value,
-    label: value,
-  }));
+  const adultsSelectOptions: SelectOption[] = [
+    { value: "", label: locale.search.peopleValue },
+    ...adultsOptions.map((value) => ({
+      value,
+      label: value,
+    })),
+  ];
   const typeLabelMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const item of tourTypes) {
@@ -372,28 +378,26 @@ export default function Home() {
         const nextSet = new Set<string>();
         const items = Array.isArray(data?.items) ? data.items : [];
         items.forEach((tour: { start_date?: string; end_date?: string }) => {
-          if (!tour.start_date || !tour.end_date) {
+          if (!tour.start_date) {
             return;
           }
-          const current = new Date(tour.start_date);
-          const last = new Date(tour.end_date);
-          if (Number.isNaN(current.getTime()) || Number.isNaN(last.getTime())) {
+          const startDate = new Date(tour.start_date);
+          if (Number.isNaN(startDate.getTime())) {
             return;
           }
-          while (current <= last) {
-            if (current >= start && current <= end) {
-              nextSet.add(toISO(current));
-            }
-            current.setDate(current.getDate() + 1);
+          if (startDate >= start && startDate <= end) {
+            nextSet.add(toISO(startDate));
           }
         });
         setAvailableDates(nextSet);
+        setHighlightDates(nextSet);
       })
       .catch((error) => {
         if (error?.name === "AbortError") {
           return;
         }
         setAvailableDates(new Set());
+        setHighlightDates(new Set());
       });
 
     return () => {
@@ -658,10 +662,11 @@ export default function Home() {
                         }
                         placeholder={locale.search.dateValue}
                         buttonClassName="h-10 px-3"
-                        resetLabel={locale.search.resetLabel}
-                        availableDates={availableDates ?? undefined}
-                        onMonthChange={setCalendarMonth}
-                      />
+                      resetLabel={locale.search.resetLabel}
+                      availableDates={availableDates ?? undefined}
+                      highlightDates={highlightDates ?? undefined}
+                      onMonthChange={setCalendarMonth}
+                    />
                     </div>
                   </div>
                   <div className="flex h-[66px] flex-col justify-between text-[10px] uppercase tracking-[0.08em] text-white/70">
