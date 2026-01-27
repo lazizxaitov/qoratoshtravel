@@ -903,7 +903,7 @@ export default function Home() {
           </div>
           <div
             ref={toursScrollRef}
-            className={`marquee marquee-draggable ${isToursDragging ? "is-dragging is-paused" : ""}`}
+            className={`tour-marquee marquee-draggable ${isToursDragging ? "is-dragging is-paused" : ""}`}
             onPointerDown={handleToursPointerDown}
             onPointerMove={handleToursPointerMove}
             onPointerUp={handleToursPointerEnd}

@@ -207,6 +207,10 @@ body {
   animation: marquee 30s linear infinite;
 }
 
+.tour-marquee .marquee-track {
+  animation: none;
+}
+
 .marquee:hover .marquee-track {
   animation-play-state: paused;
 }
