@@ -13,6 +13,7 @@ import Select, { type SelectOption } from "../components/Select";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { useContent } from "../lib/useContent";
+import { useTours } from "../lib/useTours";
 import { defaultLang, languages, type Lang } from "./content";
 
 type SearchFormState = {
@@ -46,6 +47,7 @@ const formatPeopleRange = (min: number, max: number) =>
 export default function Home() {
   const contentData = useContent();
   const [lang, setLang] = useState<Lang>(defaultLang);
+  const { tours, hotTours } = useTours(lang);
   const [searchForm, setSearchForm] = useState<SearchFormState>({
     destination: "",
     startDate: "",
@@ -63,6 +65,15 @@ export default function Home() {
   const [hotPromoIndex, setHotPromoIndex] = useState(0);
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [isConsultationOpen, setIsConsultationOpen] = useState(false);
+  const [leadForm, setLeadForm] = useState({
+    name: "",
+    lastName: "",
+    phone: "",
+    comment: "",
+  });
+  const [leadStatus, setLeadStatus] = useState<"idle" | "sending" | "success" | "error">(
+    "idle"
+  );
   const [searchStatus, setSearchStatus] = useState<"idle" | "loading" | "error">(
     "idle"
   );
@@ -188,7 +199,7 @@ export default function Home() {
   };
   const adultsOptions = ["1", "2", "3", "4", "5", "6"];
   const destinationOptions: SelectOption[] = Array.from(
-    new Set(locale.tours.map((tour) => tour.title))
+    new Set(tours.map((tour) => tour.title))
   ).map((value) => ({ value, label: value }));
   const adultsSelectOptions: SelectOption[] = adultsOptions.map((value) => ({
     value,
@@ -227,7 +238,13 @@ export default function Home() {
     }
     return options;
   }, [locale.search.typeOptions, tourTypes, lang]);
-  const toursSlideDuration = Math.max(30, locale.tours.length * 12);
+  const getTourBadge = (tour: TourResult) => {
+    if (tour.tour_type && typeLabelMap[tour.tour_type]) {
+      return typeLabelMap[tour.tour_type];
+    }
+    return tour.is_hot ? locale.hot.label : "";
+  };
+  const toursSlideDuration = Math.max(30, tours.length * 12);
   const reviewsSlideDuration = Math.max(30, locale.reviewsList.length * 10);
   const hotSlides = locale.hot.slides;
   const heroSlides = locale.hero.slides ?? [locale.hero];
@@ -276,6 +293,47 @@ export default function Home() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isConsultationOpen]);
+  const leadStatusLabel =
+    lang === "uz"
+      ? "So'rov yuborildi. Biz tez orada bog'lanamiz."
+      : lang === "en"
+      ? "Request sent. We will contact you soon."
+      : "Заявка отправлена. Мы свяжемся с вами.";
+  const leadErrorLabel =
+    lang === "uz"
+      ? "Xatolik. Qayta urinib ko'ring."
+      : lang === "en"
+      ? "Error. Please try again."
+      : "Ошибка. Попробуйте еще раз.";
+
+  const handleLeadSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (leadStatus === "sending") {
+      return;
+    }
+    setLeadStatus("sending");
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "cta",
+          lang,
+          name: leadForm.name,
+          lastName: leadForm.lastName,
+          phone: leadForm.phone,
+          comment: leadForm.comment,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+      setLeadStatus("success");
+      setLeadForm({ name: "", lastName: "", phone: "", comment: "" });
+    } catch {
+      setLeadStatus("error");
+    }
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -299,6 +357,7 @@ export default function Home() {
       startDate: toISO(start),
       endDate: toISO(end),
     });
+    params.set("lang", lang);
     if (searchForm.destination) {
       params.set("destination", searchForm.destination);
     }
@@ -341,7 +400,7 @@ export default function Home() {
       isActive = false;
       controller.abort();
     };
-  }, [calendarMonth, searchForm.destination]);
+  }, [calendarMonth, searchForm.destination, lang]);
   const perkIcons = [
     {
       viewBox: "0 0 24 24",
@@ -375,6 +434,7 @@ export default function Home() {
     const planeDurationMs = 1800;
 
     const params = new URLSearchParams();
+    params.set("lang", lang);
     if (searchForm.destination.trim()) {
       params.set("destination", searchForm.destination.trim());
     }
@@ -861,7 +921,7 @@ export default function Home() {
               className="marquee-track flex items-stretch gap-6"
               style={{ animationDuration: `${toursSlideDuration}s` }}
             >
-              {locale.tours.map((tour) => (
+              {tours.map((tour) => (
                 <a
                   key={tour.id}
                   href={`/tours/${tour.id}`}
@@ -869,14 +929,14 @@ export default function Home() {
                 >
                   <div className="relative h-48">
                     <img
-                      src={tour.image}
+                      src={tour.image_url}
                       alt={tour.title}
                       className="h-full w-full object-cover"
                       loading="lazy"
                       draggable={false}
                     />
                     <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[var(--brand-700)]">
-                      {tour.days}
+                      {tour.nights} {locale.search.nightsLabel}
                     </span>
                   </div>
                   <div className="space-y-3 p-5">
@@ -886,14 +946,16 @@ export default function Home() {
                     <div className="font-display text-xl font-semibold text-[var(--ink-900)]">
                       {tour.title}
                     </div>
-                    {tour.people ? (
+                    {tour.adults_min ? (
                       <div className="text-xs text-[var(--ink-600)]">
-                        {locale.search.peopleLabel}: {tour.people} {peopleUnit}
+                        {locale.search.peopleLabel}:{" "}
+                        {formatPeopleRange(tour.adults_min, tour.adults_max)}{" "}
+                        {peopleUnit}
                       </div>
                     ) : null}
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-semibold text-[var(--brand-700)]">
-                        {tour.price}
+                        {locale.search.priceFrom} {tour.price_from}$
                       </span>
                       <span className="rounded-full bg-[var(--brand-700)] px-4 py-2 text-xs font-semibold text-white">
                         {locale.search.button}
@@ -921,7 +983,7 @@ export default function Home() {
               {locale.hot.description}
             </p>
             <div className="max-h-[340px] space-y-4 overflow-y-auto pr-2">
-              {locale.hotTours.map((item) => (
+              {hotTours.map((item) => (
                 <a
                   key={item.id}
                   href={`/tours/${item.id}`}
@@ -934,18 +996,20 @@ export default function Home() {
                     <div className="text-xs uppercase tracking-[0.08em] text-[var(--ink-700)]">
                       {item.city}
                     </div>
-                    {item.people ? (
+                    {item.adults_min ? (
                       <div className="mt-1 text-xs text-[var(--ink-600)]">
-                        {locale.search.peopleLabel}: {item.people} {peopleUnit}
+                        {locale.search.peopleLabel}:{" "}
+                        {formatPeopleRange(item.adults_min, item.adults_max)}{" "}
+                        {peopleUnit}
                       </div>
                     ) : null}
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-semibold text-[var(--brand-700)]">
-                      {item.badge}
+                      {getTourBadge(item)}
                     </div>
                     <div className="text-sm font-semibold text-[var(--ink-900)]">
-                      {item.price}
+                      {locale.search.priceFrom} {item.price_from}$
                     </div>
                   </div>
                 </a>
@@ -1219,7 +1283,7 @@ export default function Home() {
                   ×
                 </button>
               </div>
-              <form className="mt-6 grid gap-4">
+              <form className="mt-6 grid gap-4" onSubmit={handleLeadSubmit}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="text-sm font-semibold text-[var(--ink-600)]">
                     {locale.cta.formName}
@@ -1227,6 +1291,10 @@ export default function Home() {
                       type="text"
                       className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
                       placeholder={locale.cta.formName}
+                      value={leadForm.name}
+                      onChange={(event) =>
+                        setLeadForm((prev) => ({ ...prev, name: event.target.value }))
+                      }
                     />
                   </label>
                   <label className="text-sm font-semibold text-[var(--ink-600)]">
@@ -1235,6 +1303,13 @@ export default function Home() {
                       type="text"
                       className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
                       placeholder={locale.cta.formLastName}
+                      value={leadForm.lastName}
+                      onChange={(event) =>
+                        setLeadForm((prev) => ({
+                          ...prev,
+                          lastName: event.target.value,
+                        }))
+                      }
                     />
                   </label>
                 </div>
@@ -1244,6 +1319,10 @@ export default function Home() {
                     type="tel"
                     className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
                     placeholder="+998 90 000 00 00"
+                    value={leadForm.phone}
+                    onChange={(event) =>
+                      setLeadForm((prev) => ({ ...prev, phone: event.target.value }))
+                    }
                   />
                 </label>
                 <label className="text-sm font-semibold text-[var(--ink-600)]">
@@ -1252,13 +1331,32 @@ export default function Home() {
                     rows={4}
                     className="mt-2 w-full resize-none rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
                     placeholder={locale.cta.formComment}
+                    value={leadForm.comment}
+                    onChange={(event) =>
+                      setLeadForm((prev) => ({ ...prev, comment: event.target.value }))
+                    }
                   />
                 </label>
+                {leadStatus === "success" && (
+                  <div className="text-sm text-[var(--brand-700)]">
+                    {leadStatusLabel}
+                  </div>
+                )}
+                {leadStatus === "error" && (
+                  <div className="text-sm text-red-600">{leadErrorLabel}</div>
+                )}
                 <button
                   type="submit"
                   className="mt-2 rounded-full bg-[var(--brand-700)] px-6 py-3 text-sm font-semibold text-white"
+                  disabled={leadStatus === "sending"}
                 >
-                  {locale.cta.formSubmit}
+                  {leadStatus === "sending"
+                    ? lang === "uz"
+                      ? "Yuborilmoqda..."
+                      : lang === "en"
+                      ? "Sending..."
+                      : "Отправка..."
+                    : locale.cta.formSubmit}
                 </button>
               </form>
             </div>

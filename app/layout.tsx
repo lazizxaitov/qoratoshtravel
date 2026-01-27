@@ -17,6 +17,9 @@ const bodyFont = Montserrat({
 export const metadata: Metadata = {
   title: "Qoratosh travel",
   description: "Trips, routes, and travel planning with Qoratosh travel.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

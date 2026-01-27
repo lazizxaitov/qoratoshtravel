@@ -7,8 +7,17 @@ export const runtime = "nodejs";
 type TourPayload = {
   id: string;
   title: string;
+  title_ru?: string;
+  title_uz?: string;
+  title_en?: string;
   country: string;
+  country_ru?: string;
+  country_uz?: string;
+  country_en?: string;
   city: string;
+  city_ru?: string;
+  city_uz?: string;
+  city_en?: string;
   start_date: string;
   end_date: string;
   adults_min: number;
@@ -23,11 +32,24 @@ type TourPayload = {
 
 function normalizeTour(payload: Partial<TourPayload>) {
   const errors: string[] = [];
+  const title =
+    payload.title ??
+    payload.title_ru ??
+    payload.title_uz ??
+    payload.title_en;
+  const country =
+    payload.country ??
+    payload.country_ru ??
+    payload.country_uz ??
+    payload.country_en;
+  const city =
+    payload.city ??
+    payload.city_ru ??
+    payload.city_uz ??
+    payload.city_en;
+
   const required = [
     "id",
-    "title",
-    "country",
-    "city",
     "start_date",
     "end_date",
     "adults_min",
@@ -42,6 +64,15 @@ function normalizeTour(payload: Partial<TourPayload>) {
       errors.push(`Missing ${key}`);
     }
   }
+  if (!title) {
+    errors.push("Missing title");
+  }
+  if (!country) {
+    errors.push("Missing country");
+  }
+  if (!city) {
+    errors.push("Missing city");
+  }
 
   const isHot = payload.is_hot ?? 0;
   const tourType =
@@ -54,9 +85,25 @@ function normalizeTour(payload: Partial<TourPayload>) {
     ? payload.gallery_urls.filter((url) => typeof url === "string")
     : [];
 
+  const fallbackTitle = title ?? "";
+  const fallbackCountry = country ?? "";
+  const fallbackCity = city ?? "";
+
   return {
     data: {
       ...payload,
+      title: fallbackTitle,
+      country: fallbackCountry,
+      city: fallbackCity,
+      title_ru: payload.title_ru ?? fallbackTitle,
+      title_uz: payload.title_uz ?? fallbackTitle,
+      title_en: payload.title_en ?? fallbackTitle,
+      country_ru: payload.country_ru ?? fallbackCountry,
+      country_uz: payload.country_uz ?? fallbackCountry,
+      country_en: payload.country_en ?? fallbackCountry,
+      city_ru: payload.city_ru ?? fallbackCity,
+      city_uz: payload.city_uz ?? fallbackCity,
+      city_en: payload.city_en ?? fallbackCity,
       is_hot: isHot,
       tour_type: tourType,
       gallery_urls: galleryUrls,
@@ -75,7 +122,10 @@ export async function GET(request: Request) {
   const rows = db
     .prepare(
       `
-        SELECT id, title, country, city, start_date, end_date, adults_min, adults_max,
+        SELECT id, title, title_ru, title_uz, title_en,
+               country, country_ru, country_uz, country_en,
+               city, city_ru, city_uz, city_en,
+               start_date, end_date, adults_min, adults_max,
                price_from, nights, image_url, is_hot, tour_type, gallery_urls
         FROM tours
         ORDER BY start_date ASC;
@@ -117,11 +167,17 @@ export async function POST(request: Request) {
   const insert = db.prepare(
     `
       INSERT INTO tours (
-        id, title, country, city, start_date, end_date,
+        id, title, title_ru, title_uz, title_en,
+        country, country_ru, country_uz, country_en,
+        city, city_ru, city_uz, city_en,
+        start_date, end_date,
         adults_min, adults_max, price_from, nights, image_url, is_hot,
         tour_type, gallery_urls
       ) VALUES (
-        @id, @title, @country, @city, @start_date, @end_date,
+        @id, @title, @title_ru, @title_uz, @title_en,
+        @country, @country_ru, @country_uz, @country_en,
+        @city, @city_ru, @city_uz, @city_en,
+        @start_date, @end_date,
         @adults_min, @adults_max, @price_from, @nights, @image_url, @is_hot,
         @tour_type, @gallery_urls
       );
@@ -151,8 +207,17 @@ export async function PUT(request: Request) {
     `
       UPDATE tours SET
         title = @title,
+        title_ru = @title_ru,
+        title_uz = @title_uz,
+        title_en = @title_en,
         country = @country,
+        country_ru = @country_ru,
+        country_uz = @country_uz,
+        country_en = @country_en,
         city = @city,
+        city_ru = @city_ru,
+        city_uz = @city_uz,
+        city_en = @city_en,
         start_date = @start_date,
         end_date = @end_date,
         adults_min = @adults_min,

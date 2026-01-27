@@ -5,15 +5,29 @@ import { useParams } from "next/navigation";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteHeader from "../../../components/SiteHeader";
 import { useContent } from "../../../lib/useContent";
+import { useTours } from "../../../lib/useTours";
 import { defaultLang, languages, type Lang } from "../../content";
 
 export default function TourPage() {
   const contentData = useContent();
   const [lang, setLang] = useState<Lang>(defaultLang);
+  const { tours } = useTours(lang);
   const params = useParams<{ id: string }>();
   const tourId = params?.id ?? "";
   const locale = contentData[lang];
+  const [isConsultationOpen, setIsConsultationOpen] = useState(false);
+  const [leadForm, setLeadForm] = useState({
+    name: "",
+    lastName: "",
+    phone: "",
+    comment: "",
+  });
+  const [leadStatus, setLeadStatus] = useState<"idle" | "sending" | "success" | "error">(
+    "idle"
+  );
   const peopleUnit = locale.search.peopleUnit ?? "";
+  const formatPeopleRange = (min: number, max: number) =>
+    min === max ? `${min}` : `${min}-${max}`;
   useEffect(() => {
     const saved = window.localStorage.getItem("qoratosh-lang");
     if (
@@ -27,31 +41,93 @@ export default function TourPage() {
     setLang(next);
     window.localStorage.setItem("qoratosh-lang", next);
   };
+  useEffect(() => {
+    if (!isConsultationOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsConsultationOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isConsultationOpen]);
+  const leadStatusLabel =
+    lang === "uz"
+      ? "So'rov yuborildi. Biz tez orada bog'lanamiz."
+      : lang === "en"
+      ? "Request sent. We will contact you soon."
+      : "Заявка отправлена. Мы свяжемся с вами.";
+  const leadErrorLabel =
+    lang === "uz"
+      ? "Xatolik. Qayta urinib ko'ring."
+      : lang === "en"
+      ? "Error. Please try again."
+      : "Ошибка. Попробуйте еще раз.";
+
+  const handleLeadSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (leadStatus === "sending") {
+      return;
+    }
+    setLeadStatus("sending");
+    const tourLink =
+      typeof window !== "undefined" ? window.location.href : undefined;
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "tour",
+          lang,
+          name: leadForm.name,
+          lastName: leadForm.lastName,
+          phone: leadForm.phone,
+          comment: leadForm.comment,
+          tourId: tourId || undefined,
+          tourTitle: title,
+          tourLink,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+      setLeadStatus("success");
+      setLeadForm({ name: "", lastName: "", phone: "", comment: "" });
+    } catch {
+      setLeadStatus("error");
+    }
+  };
   const [tourSlideIndex, setTourSlideIndex] = useState(0);
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
   const [tourRange, setTourRange] = useState<{ start: string; end: string } | null>(
     null
   );
 
-  const tour = useMemo(() => {
-    const fromTours = locale.tours.find((item) => item.id === tourId);
-    const fromHot = locale.hotTours.find((item) => item.id === tourId);
-    return { fromTours, fromHot };
-  }, [locale.hotTours, locale.tours, tourId]);
+  const tour = useMemo(
+    () => tours.find((item) => item.id === tourId) ?? null,
+    [tours, tourId]
+  );
 
-  const title = tour.fromTours?.title ?? tour.fromHot?.title ?? "Tour";
-  const city = tour.fromTours?.city ?? tour.fromHot?.city ?? "";
-  const price = tour.fromTours?.price ?? tour.fromHot?.price ?? "";
-  const daysLabel = tour.fromTours?.days ?? "";
-  const image = tour.fromTours?.image ?? locale.hero.image;
-  const people = tour.fromTours?.people ?? tour.fromHot?.people ?? "";
+  const title = tour?.title ?? "Tour";
+  const city = tour?.city ?? "";
+  const price = tour ? `${locale.search.priceFrom} ${tour.price_from}$` : "";
+  const daysLabel = tour
+    ? `${tour.nights} ${locale.search.nightsLabel}`
+    : "";
+  const image = tour?.image_url ?? locale.hero.image;
+  const people = tour
+    ? formatPeopleRange(tour.adults_min, tour.adults_max)
+    : "";
   const gallery = useMemo(() => {
     const images = [
       image,
+      ...(tour?.gallery_urls ?? []),
       ...locale.hero.slides.map((slide) => slide.image),
-    ];
+    ].filter(Boolean);
     return Array.from(new Set(images));
-  }, [image, locale.hero.slides]);
+  }, [image, locale.hero.slides, tour]);
 
   useEffect(() => {
     if (gallery.length <= 1) {
@@ -74,6 +150,7 @@ export default function TourPage() {
     const params = new URLSearchParams({
       destination: title,
     });
+    params.set("lang", lang);
 
     setTourRange(null);
     fetch(`/api/tours?${params.toString()}`, { signal: controller.signal })
@@ -100,7 +177,7 @@ export default function TourPage() {
       isActive = false;
       controller.abort();
     };
-  }, [title, tourId]);
+  }, [title, tourId, lang]);
 
   const pad = (value: number) => value.toString().padStart(2, "0");
   const toISODate = (value: Date) =>
@@ -248,12 +325,13 @@ export default function TourPage() {
                 </div>
               )}
             </div>
-            <a
-              href="/contacts"
+            <button
+              type="button"
               className="mt-5 inline-flex rounded-full bg-[var(--brand-700)] px-5 py-2 text-sm font-semibold text-white"
+              onClick={() => setIsConsultationOpen(true)}
             >
               {locale.tourPage.bookButton}
-            </a>
+            </button>
           </div>
         </section>
 
@@ -365,6 +443,115 @@ export default function TourPage() {
           </div>
         </section>
       </main>
+      {isConsultationOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm"
+          onClick={() => setIsConsultationOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-[28px] border border-white/30 bg-white p-6 shadow-[var(--shadow-strong)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
+                  {locale.cta.kicker}
+                </div>
+                <div className="font-display text-2xl font-semibold text-[var(--ink-900)]">
+                  {locale.cta.formTitle}
+                </div>
+                <p className="mt-2 text-sm text-[var(--ink-600)]">
+                  {locale.cta.formSubtitle}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 text-[var(--ink-700)] hover:bg-[var(--sand-50)]"
+                aria-label="Close"
+                onClick={() => setIsConsultationOpen(false)}
+              >
+                Г—
+              </button>
+            </div>
+            <form className="mt-6 grid gap-4" onSubmit={handleLeadSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-semibold text-[var(--ink-600)]">
+                  {locale.cta.formName}
+                  <input
+                    type="text"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
+                    placeholder={locale.cta.formName}
+                    value={leadForm.name}
+                    onChange={(event) =>
+                      setLeadForm((prev) => ({ ...prev, name: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[var(--ink-600)]">
+                  {locale.cta.formLastName}
+                  <input
+                    type="text"
+                    className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
+                    placeholder={locale.cta.formLastName}
+                    value={leadForm.lastName}
+                    onChange={(event) =>
+                      setLeadForm((prev) => ({
+                        ...prev,
+                        lastName: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <label className="text-sm font-semibold text-[var(--ink-600)]">
+                {locale.cta.formPhone}
+                <input
+                  type="tel"
+                  className="mt-2 w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
+                  placeholder="+998 90 000 00 00"
+                  value={leadForm.phone}
+                  onChange={(event) =>
+                    setLeadForm((prev) => ({ ...prev, phone: event.target.value }))
+                  }
+                />
+              </label>
+              <label className="text-sm font-semibold text-[var(--ink-600)]">
+                {locale.cta.formComment}
+                <textarea
+                  rows={4}
+                  className="mt-2 w-full resize-none rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
+                  placeholder={locale.cta.formComment}
+                  value={leadForm.comment}
+                  onChange={(event) =>
+                    setLeadForm((prev) => ({ ...prev, comment: event.target.value }))
+                  }
+                />
+              </label>
+              {leadStatus === "success" && (
+                <div className="text-sm text-[var(--brand-700)]">
+                  {leadStatusLabel}
+                </div>
+              )}
+              {leadStatus === "error" && (
+                <div className="text-sm text-red-600">{leadErrorLabel}</div>
+              )}
+              <button
+                type="submit"
+                className="mt-2 rounded-full bg-[var(--brand-700)] px-6 py-3 text-sm font-semibold text-white"
+                disabled={leadStatus === "sending"}
+              >
+                {leadStatus === "sending"
+                  ? lang === "uz"
+                    ? "Yuborilmoqda..."
+                    : lang === "en"
+                    ? "Sending..."
+                    : "Отправка..."
+                  : locale.cta.formSubmit}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <SiteFooter locale={locale.footer} />
     </div>
   );

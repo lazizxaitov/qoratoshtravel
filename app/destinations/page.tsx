@@ -6,11 +6,13 @@ import Select, { type SelectOption } from "../../components/Select";
 import SiteFooter from "../../components/SiteFooter";
 import SiteHeader from "../../components/SiteHeader";
 import { useContent } from "../../lib/useContent";
+import { useTours } from "../../lib/useTours";
 import { defaultLang, languages, type Lang } from "../content";
 
 export default function DestinationsPage() {
   const contentData = useContent();
   const [lang, setLang] = useState<Lang>(defaultLang);
+  const { tours } = useTours(lang);
   const [filters, setFilters] = useState({
     destination: "",
     startDate: "",
@@ -24,6 +26,19 @@ export default function DestinationsPage() {
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
   const locale = contentData[lang];
   const peopleUnit = locale.search.peopleUnit ?? "";
+  const tourCards = useMemo(
+    () =>
+      tours.map((tour) => ({
+        id: tour.id,
+        title: tour.title,
+        city: tour.city || tour.country,
+        price: `${locale.search.priceFrom} ${tour.price_from}$`,
+        days: `${tour.nights} ${locale.search.nightsLabel}`,
+        image: tour.image_url,
+        people: `${tour.adults_min}-${tour.adults_max}`,
+      })),
+    [locale.search.nightsLabel, locale.search.priceFrom, tours]
+  );
   useEffect(() => {
     const saved = window.localStorage.getItem("qoratosh-lang");
     if (
@@ -48,7 +63,7 @@ export default function DestinationsPage() {
     { value: "", label: allLabel },
     ...Array.from(
       new Map(
-        locale.tours.map((tour) => [
+        tourCards.map((tour) => [
           tour.title,
           { value: tour.title, label: tour.title },
         ])
@@ -56,14 +71,14 @@ export default function DestinationsPage() {
     ),
   ];
   const maxNights = useMemo(() => {
-    return locale.tours.reduce((maxValue, tour) => {
+    return tourCards.reduce((maxValue, tour) => {
       const nightsValue = Number.parseInt(
         String(tour.days).match(/\d+/)?.[0] ?? "0",
         10
       );
       return Math.max(maxValue, Number.isNaN(nightsValue) ? 0 : nightsValue);
     }, 0);
-  }, [locale.tours]);
+  }, [tourCards]);
   const nightsOptions: SelectOption[] = [
     { value: "", label: allLabel },
     ...Array.from({ length: maxNights }, (_, index) => {
@@ -94,6 +109,7 @@ export default function DestinationsPage() {
       startDate: toISO(start),
       endDate: toISO(end),
     });
+    params.set("lang", lang);
     if (filters.destination) {
       params.set("destination", filters.destination);
     }
@@ -136,11 +152,11 @@ export default function DestinationsPage() {
       isActive = false;
       controller.abort();
     };
-  }, [calendarMonth, filters.destination]);
+  }, [calendarMonth, filters.destination, lang]);
 
   const filteredTours = useMemo(() => {
     const normalized = filters.destination.trim().toLowerCase();
-    return locale.tours.filter((tour) => {
+    return tourCards.filter((tour) => {
       const title = tour.title.toLowerCase();
       const city = tour.city.toLowerCase();
       const matchesText =
@@ -154,7 +170,7 @@ export default function DestinationsPage() {
         : true;
       return matchesText && matchesNights;
     });
-  }, [filters.destination, filters.nights, locale.tours]);
+  }, [filters.destination, filters.nights, tourCards]);
 
   return (
     <div className="text-[15px] text-[var(--ink-700)]">

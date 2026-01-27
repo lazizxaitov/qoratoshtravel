@@ -57,6 +57,31 @@ function ensureDatabase(): DbInstance {
       "UPDATE tours SET gallery_urls = gallery_json WHERE gallery_urls = '[]' AND gallery_json != '[]';"
     );
   }
+  const localizedColumns = [
+    "title_ru",
+    "title_uz",
+    "title_en",
+    "country_ru",
+    "country_uz",
+    "country_en",
+    "city_ru",
+    "city_uz",
+    "city_en",
+  ];
+  for (const column of localizedColumns) {
+    if (!existingColumns.includes(column)) {
+      db.exec(`ALTER TABLE tours ADD COLUMN ${column} TEXT NOT NULL DEFAULT '';`);
+    }
+  }
+  db.prepare("UPDATE tours SET title_ru = title WHERE title_ru = ''").run();
+  db.prepare("UPDATE tours SET title_uz = title WHERE title_uz = ''").run();
+  db.prepare("UPDATE tours SET title_en = title WHERE title_en = ''").run();
+  db.prepare("UPDATE tours SET country_ru = country WHERE country_ru = ''").run();
+  db.prepare("UPDATE tours SET country_uz = country WHERE country_uz = ''").run();
+  db.prepare("UPDATE tours SET country_en = country WHERE country_en = ''").run();
+  db.prepare("UPDATE tours SET city_ru = city WHERE city_ru = ''").run();
+  db.prepare("UPDATE tours SET city_uz = city WHERE city_uz = ''").run();
+  db.prepare("UPDATE tours SET city_en = city WHERE city_en = ''").run();
   db.prepare(
     "UPDATE tours SET tour_type = 'hot' WHERE is_hot = 1 AND tour_type != 'hot';"
   ).run();
@@ -114,6 +139,27 @@ function ensureDatabase(): DbInstance {
     insertManyTypes(seedTypes);
   }
 
+  const seedTourIds = new Set([
+    "sharm-2025-10",
+    "istanbul-2025-09",
+    "dubai-2025-11",
+  ]);
+  const existingTours = db
+    .prepare("SELECT id FROM tours")
+    .all()
+    .map((row) => (row as { id: string }).id);
+  if (
+    existingTours.length > 0 &&
+    existingTours.every((id) => seedTourIds.has(id))
+  ) {
+    const deleteSeed = db.prepare("DELETE FROM tours WHERE id = ?");
+    const deleteMany = db.transaction((rows) => {
+      for (const id of rows) {
+        deleteSeed.run(id);
+      }
+    });
+    deleteMany(existingTours);
+  }
   dbInstance = db;
   return dbInstance;
 }

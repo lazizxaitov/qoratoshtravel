@@ -23,28 +23,86 @@ export default function ContactsPage() {
     setLang(next);
     window.localStorage.setItem("qoratosh-lang", next);
   };
+  const contacts = (locale as { contacts?: Record<string, string> }).contacts ?? {};
   const phoneLink = locale.footer.phone.replace(/\s+/g, "");
   const mapQuery = encodeURIComponent(locale.footer.address);
   const hoursLabel =
-    lang === "uz"
+    contacts.hoursLabel ??
+    (lang === "uz"
       ? "Ish vaqti"
       : lang === "en"
       ? "Working hours"
-      : "Время работы";
+      : "\u0412\u0440\u0435\u043c\u044f \u0440\u0430\u0431\u043e\u0442\u044b");
   const hoursValue =
-    lang === "uz"
+    contacts.hoursValue ??
+    (lang === "uz"
       ? "Dushanba - Shanba, 09:00 - 19:00"
       : lang === "en"
       ? "Mon - Sat, 09:00 - 19:00"
-      : "Пн - Сб, 09:00 - 19:00";
+      : "\u041f\u043d - \u0421\u0431, 09:00 - 19:00");
+  const callLabel =
+    contacts.callLabel ??
+    (lang === "uz"
+      ? "Qo'ng'iroq qilish"
+      : lang === "en"
+      ? "Call us"
+      : "\u041f\u043e\u0437\u0432\u043e\u043d\u0438\u0442\u044c");
+  const whatsappLabel = contacts.whatsappLabel ?? "WhatsApp";
+  const directionsLabel =
+    contacts.directionsLabel ??
+    (lang === "uz"
+      ? "Yo'l topish"
+      : lang === "en"
+      ? "Get directions"
+      : "\u041f\u043e\u0441\u0442\u0440\u043e\u0438\u0442\u044c \u043c\u0430\u0440\u0448\u0440\u0443\u0442");
+  const quickTitle =
+    contacts.quickTitle ??
+    (lang === "uz"
+      ? "Tezkor aloqa"
+      : lang === "en"
+      ? "Quick message"
+      : "\u0411\u044b\u0441\u0442\u0440\u0430\u044f \u0441\u0432\u044f\u0437\u044c");
+  const quickName =
+    contacts.quickName ??
+    (lang === "uz"
+      ? "Ism"
+      : lang === "en"
+      ? "Name"
+      : "\u0418\u043c\u044f");
+  const quickPhone =
+    contacts.quickPhone ??
+    (lang === "uz"
+      ? "Telefon"
+      : lang === "en"
+      ? "Phone"
+      : "\u0422\u0435\u043b\u0435\u0444\u043e\u043d");
+  const quickMessage =
+    contacts.quickMessage ??
+    (lang === "uz"
+      ? "Xabar"
+      : lang === "en"
+      ? "Message"
+      : "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435");
+  const quickSubmit =
+    contacts.quickSubmit ??
+    (lang === "uz"
+      ? "Yuborish"
+      : lang === "en"
+      ? "Send"
+      : "\u041e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c");
+  const addressLabel = contacts.addressLabel ?? locale.footer.contactsTitle;
+  const phoneLabel = contacts.phoneLabel ?? "Phone";
+  const emailLabel = contacts.emailLabel ?? "Email";
   const contactCards = [
     {
-      label: locale.footer.contactsTitle,
+      label: addressLabel,
       value: locale.footer.address,
     },
-    { label: "Phone", value: locale.footer.phone },
-    { label: "Email", value: locale.footer.email },
+    { label: phoneLabel, value: locale.footer.phone },
+    { label: emailLabel, value: locale.footer.email },
   ];
+
+
 
   return (
     <div className="text-[15px] text-[var(--ink-700)]">
@@ -81,11 +139,7 @@ export default function ContactsPage() {
                   href={`tel:${phoneLink}`}
                   className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[var(--brand-700)]"
                 >
-                  {lang === "uz"
-                    ? "Qo'ng'iroq qilish"
-                    : lang === "en"
-                    ? "Call us"
-                    : "Позвонить"}
+                  {callLabel}
                 </a>
                 <a
                   href={locale.footer.socialLinks.find((link) => link.label === "WhatsApp")?.href}
@@ -93,11 +147,7 @@ export default function ContactsPage() {
                   rel="noreferrer"
                   className="rounded-full bg-[var(--brand-700)] px-4 py-2 text-sm font-semibold text-white"
                 >
-                  {lang === "uz"
-                    ? "WhatsApp"
-                    : lang === "en"
-                    ? "WhatsApp"
-                    : "WhatsApp"}
+                  {whatsappLabel}
                 </a>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
@@ -105,11 +155,7 @@ export default function ContactsPage() {
                   rel="noreferrer"
                   className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[var(--brand-700)]"
                 >
-                  {lang === "uz"
-                    ? "Yo'l topish"
-                    : lang === "en"
-                    ? "Get directions"
-                    : "Построить маршрут"}
+                  {directionsLabel}
                 </a>
               </div>
             </div>
@@ -219,44 +265,22 @@ export default function ContactsPage() {
         <section className="mt-8">
           <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]">
             <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
-              {lang === "uz"
-                ? "Tezkor aloqa"
-                : lang === "en"
-                ? "Quick message"
-                : "Быстрая связь"}
+              {quickTitle}
             </div>
             <form className="mt-4 grid gap-3 text-sm text-[var(--ink-700)] md:grid-cols-2">
               <input
                 type="text"
-                placeholder={
-                  lang === "uz"
-                    ? "Ism"
-                    : lang === "en"
-                    ? "Name"
-                    : "Имя"
-                }
+                placeholder={quickName}
                 className="w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
               />
               <input
                 type="tel"
-                placeholder={
-                  lang === "uz"
-                    ? "Telefon"
-                    : lang === "en"
-                    ? "Phone"
-                    : "Телефон"
-                }
+                placeholder={quickPhone}
                 className="w-full rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
               />
               <textarea
                 rows={3}
-                placeholder={
-                  lang === "uz"
-                    ? "Xabar"
-                    : lang === "en"
-                    ? "Message"
-                    : "Сообщение"
-                }
+                placeholder={quickMessage}
                 className="md:col-span-2 w-full resize-none rounded-2xl border border-black/10 bg-[var(--sand-50)] px-4 py-2 text-sm text-[var(--ink-900)] focus:border-[var(--brand-500)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-100)]"
               />
               <div className="md:col-span-2 flex justify-end">
@@ -264,11 +288,7 @@ export default function ContactsPage() {
                   type="submit"
                   className="rounded-full bg-[var(--brand-700)] px-5 py-2 text-sm font-semibold text-white"
                 >
-                  {lang === "uz"
-                    ? "Yuborish"
-                    : lang === "en"
-                    ? "Send"
-                    : "Отправить"}
+                  {quickSubmit}
                 </button>
               </div>
             </form>

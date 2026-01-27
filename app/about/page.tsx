@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import SiteFooter from "../../components/SiteFooter";
 import SiteHeader from "../../components/SiteHeader";
 import { useContent } from "../../lib/useContent";
+import { useTours } from "../../lib/useTours";
 import { defaultLang, languages, type Lang } from "../content";
 
 export default function AboutPage() {
   const contentData = useContent();
   const [lang, setLang] = useState<Lang>(defaultLang);
+  const { tours } = useTours(lang);
   const locale = contentData[lang];
   useEffect(() => {
     const saved = window.localStorage.getItem("qoratosh-lang");
@@ -23,7 +25,7 @@ export default function AboutPage() {
     setLang(next);
     window.localStorage.setItem("qoratosh-lang", next);
   };
-  const stats = [
+  const defaultStats = [
     {
       value: "2015",
       label:
@@ -31,16 +33,16 @@ export default function AboutPage() {
           ? "Asos solingan"
           : lang === "en"
           ? "Founded"
-          : "Год основания",
+          : "?????? ??????????????????",
     },
     {
-      value: `${locale.tours.length}+`,
+      value: "{tours}+",
       label:
         lang === "uz"
           ? "Yo'nalishlar"
           : lang === "en"
           ? "Routes"
-          : "Направлений",
+          : "??????????????????????",
     },
     {
       value: "24/7",
@@ -49,23 +51,27 @@ export default function AboutPage() {
           ? "Qo'llab-quvvatlash"
           : lang === "en"
           ? "Support"
-          : "Поддержка",
+          : "??????????????????",
     },
   ];
-  const steps = [
+  const stats = defaultStats.map((item) => ({
+    ...item,
+    value: String(item.value ?? "").replace("{tours}", String(tours.length)),
+  }));
+  const defaultSteps = [
     {
       title:
         lang === "uz"
           ? "Yo'nalishni tanlaymiz"
           : lang === "en"
           ? "We tailor the route"
-          : "Подбираем маршрут",
+          : "?????????????????? ??????????????",
       text:
         lang === "uz"
           ? "Istaklaringiz va budjetingizga mos variantlar."
           : lang === "en"
           ? "Options that match your wishes and budget."
-          : "Под ваши пожелания и бюджет.",
+          : "?????? ???????? ?????????????????? ?? ????????????.",
     },
     {
       title:
@@ -73,13 +79,13 @@ export default function AboutPage() {
           ? "Bron va hujjatlar"
           : lang === "en"
           ? "Booking and docs"
-          : "Бронирование и документы",
+          : "???????????????????????? ?? ??????????????????",
       text:
         lang === "uz"
           ? "Chipta, mehmonxona, transfer va sug'urta."
           : lang === "en"
           ? "Tickets, hotel, transfers, insurance."
-          : "Билеты, отель, трансферы, страховка.",
+          : "????????????, ??????????, ??????????????????, ??????????????????.",
     },
     {
       title:
@@ -87,19 +93,49 @@ export default function AboutPage() {
           ? "Safarda hamrohlik"
           : lang === "en"
           ? "Support on the trip"
-          : "Сопровождение в пути",
+          : "?????????????????????????? ?? ????????",
       text:
         lang === "uz"
           ? "24/7 aloqa va tezkor yordam."
           : lang === "en"
           ? "24/7 contact and quick help."
-          : "24/7 связь и помощь.",
+          : "24/7 ?????????? ?? ????????????.",
     },
   ];
+  const steps = defaultSteps;
+  const experienceTitle =
+    lang === "uz"
+      ? "Bizning tajriba"
+      : lang === "en"
+      ? "Our experience"
+      : "?????? ????????";
+  const instagramLabel =
+    lang === "uz" ? "Instagram" : lang === "en" ? "Instagram" : "??????????????????";
+  const missionTitle =
+    lang === "uz"
+      ? "Bizning missiya"
+      : lang === "en"
+      ? "Our mission"
+      : "???????? ????????????";
+  const missionText =
+    lang === "uz"
+      ? "Sayohatni qulay, xavfsiz va esda qolarli qilish. Har bir yo'nalishda shaxsiy yondashuv."
+      : lang === "en"
+      ? "Make every trip comfortable, safe, and memorable with a personal touch."
+      : "?????????????? ?????????????????????? ????????????????????, ???????????????????? ?? ???????????????????????????? ?? ???????????????????????? ????????????????.";
+  const missionNote =
+    lang === "uz"
+      ? "Biz har bir mijozga mos reja tuzamiz va yo'l bo'yi yordam beramiz."
+      : lang === "en"
+      ? "We build a tailored plan and stay with you at every step."
+      : "???? ???????????? ???????????????????????????? ???????? ?? ???????????????????????? ???? ???????????? ????????.";
+  const galleryLabel =
+    lang === "uz" ? "Galereya" : lang === "en" ? "Gallery" : "??????????????";
+
   const gallery = useMemo(() => {
     const images = [
-      ...locale.tours.map((tour) => ({
-        src: tour.image,
+      ...tours.map((tour) => ({
+        src: tour.image_url,
         alt: tour.title,
       })),
       ...locale.hero.slides.map((slide) => ({
@@ -115,7 +151,7 @@ export default function AboutPage() {
       seen.add(item.src);
       return true;
     });
-  }, [locale.hero.slides, locale.tours]);
+  }, [locale.hero.slides, tours]);
 
   return (
     <div className="text-[15px] text-[var(--ink-700)]">
@@ -176,11 +212,7 @@ export default function AboutPage() {
             </div>
             <section className="mt-8 rounded-[28px] border border-black/5 bg-white p-6 shadow-[var(--shadow-soft)]">
               <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
-                {lang === "uz"
-                  ? "Bizning tajriba"
-                  : lang === "en"
-                  ? "Our experience"
-                  : "\u041d\u0430\u0448 \u043e\u043f\u044b\u0442"}
+                {experienceTitle}
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {stats.map((item) => (
@@ -255,11 +287,7 @@ export default function AboutPage() {
             </div>
             <div className="rounded-[28px] border border-black/5 bg-white/80 p-6 shadow-[var(--shadow-soft)]">
               <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
-                {lang === "uz"
-                  ? "Instagram"
-                  : lang === "en"
-                  ? "Instagram"
-                  : "\u0418\u043d\u0441\u0442\u0430\u0433\u0440\u0430\u043c"}
+                {instagramLabel}
               </div>
               <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
                 <iframe
@@ -275,35 +303,19 @@ export default function AboutPage() {
 
         <section className="mt-6 glass-panel rounded-[28px] border border-white/40 p-6">
           <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
-            {lang === "uz"
-              ? "Bizning missiya"
-              : lang === "en"
-              ? "Our mission"
-              : "Наша миссия"}
+            {missionTitle}
           </div>
           <p className="mt-3 text-sm text-[var(--ink-700)]">
-            {lang === "uz"
-              ? "Sayohatni qulay, xavfsiz va esda qolarli qilish. Har bir yo'nalishda shaxsiy yondashuv."
-              : lang === "en"
-              ? "Make every trip comfortable, safe, and memorable with a personal touch."
-              : "Сделать путешествие комфортным, безопасным и запоминающимся с персональным подходом."}
+            {missionText}
           </p>
           <div className="mt-5 rounded-2xl bg-white/70 p-4 text-xs text-[var(--ink-600)]">
-            {lang === "uz"
-              ? "Biz har bir mijozga mos reja tuzamiz va yo'l bo'yi yordam beramiz."
-              : lang === "en"
-              ? "We build a tailored plan and stay with you at every step."
-              : "Мы строим индивидуальный план и сопровождаем на каждом шаге."}
+            {missionNote}
           </div>
         </section>
 
         <section className="mt-12 space-y-4">
           <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand-700)]">
-            {lang === "uz"
-              ? "Galereya"
-              : lang === "en"
-              ? "Gallery"
-              : "Галерея"}
+            {galleryLabel}
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {gallery.slice(0, 4).map((item) => (

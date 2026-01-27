@@ -215,64 +215,8 @@ export const content = {
         { href: "https://wa.me/998900000000", label: "WhatsApp" },
       ],
     },
-    tours: [
-      {
-        id: "sharm",
-        title: "Шарм-эль-Шейх",
-        city: "Египет",
-        price: "от 900$",
-        days: "7 ночей",
-        people: "1-4",
-        image:
-          "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "istanbul",
-        title: "Стамбул",
-        city: "Турция",
-        price: "от 520$",
-        days: "4 ночи",
-        people: "1-3",
-        image:
-          "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "dubai",
-        title: "Дубай",
-        city: "ОАЭ",
-        price: "от 1200$",
-        days: "6 ночей",
-        people: "2-6",
-        image:
-          "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
-      },
-    ],
-    hotTours: [
-      {
-        id: "antalya",
-        title: "Анталья",
-        city: "Турция",
-        price: "от 430$",
-        badge: "Горящий тур",
-        people: "2-4",
-      },
-      {
-        id: "bali",
-        title: "Бали",
-        city: "Индонезия",
-        price: "от 1490$",
-        badge: "Лимитировано",
-        people: "2-4",
-      },
-      {
-        id: "prague",
-        title: "Прага",
-        city: "Чехия",
-        price: "от 610$",
-        badge: "Осенний хит",
-        people: "1-3",
-      },
-    ],
+    tours: [],
+    hotTours: [],
     reviewsList: [
       {
         id: "madina",
@@ -502,64 +446,8 @@ export const content = {
         { href: "https://wa.me/998900000000", label: "WhatsApp" },
       ],
     },
-    tours: [
-      {
-        id: "sharm",
-        title: "Sharm el-Sheyx",
-        city: "Misr",
-        price: "900$ dan",
-        days: "7 kecha",
-        people: "1-4",
-        image:
-          "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "istanbul",
-        title: "Istanbul",
-        city: "Turkiya",
-        price: "520$ dan",
-        days: "4 kecha",
-        people: "1-3",
-        image:
-          "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "dubai",
-        title: "Dubay",
-        city: "BAA",
-        price: "1200$ dan",
-        days: "6 kecha",
-        people: "2-6",
-        image:
-          "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
-      },
-    ],
-    hotTours: [
-      {
-        id: "antalya",
-        title: "Antalya",
-        city: "Turkiya",
-        price: "430$ dan",
-        badge: "Issiq tur",
-        people: "2-4",
-      },
-      {
-        id: "bali",
-        title: "Bali",
-        city: "Indoneziya",
-        price: "1490$ dan",
-        badge: "Cheklangan",
-        people: "2-4",
-      },
-      {
-        id: "prague",
-        title: "Praga",
-        city: "Chexiya",
-        price: "610$ dan",
-        badge: "Kuzgi hit",
-        people: "1-3",
-      },
-    ],
+    tours: [],
+    hotTours: [],
     reviewsList: [
       {
         id: "madina",
@@ -782,64 +670,8 @@ export const content = {
         { href: "https://wa.me/998900000000", label: "WhatsApp" },
       ],
     },
-    tours: [
-      {
-        id: "sharm",
-        title: "Sharm El Sheikh",
-        city: "Egypt",
-        price: "from $900",
-        days: "7 nights",
-        people: "1-4",
-        image:
-          "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "istanbul",
-        title: "Istanbul",
-        city: "Turkey",
-        price: "from $520",
-        days: "4 nights",
-        people: "1-3",
-        image:
-          "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop",
-      },
-      {
-        id: "dubai",
-        title: "Dubai",
-        city: "UAE",
-        price: "from $1200",
-        days: "6 nights",
-        people: "2-6",
-        image:
-          "https://images.unsplash.com/photo-1504270997636-07ddfbd48945?q=80&w=1200&auto=format&fit=crop",
-      },
-    ],
-    hotTours: [
-      {
-        id: "antalya",
-        title: "Antalya",
-        city: "Turkey",
-        price: "from $430",
-        badge: "Hot deal",
-        people: "2-4",
-      },
-      {
-        id: "bali",
-        title: "Bali",
-        city: "Indonesia",
-        price: "from $1490",
-        badge: "Limited",
-        people: "2-4",
-      },
-      {
-        id: "prague",
-        title: "Prague",
-        city: "Czechia",
-        price: "from $610",
-        badge: "Autumn hit",
-        people: "1-3",
-      },
-    ],
+    tours: [],
+    hotTours: [],
     reviewsList: [
       {
         id: "madina",

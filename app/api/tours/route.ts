@@ -16,18 +16,33 @@ function normalizeDate(value: string | null) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const langParam = searchParams.get("lang")?.trim().toLowerCase() || "";
+  const lang =
+    langParam === "ru" || langParam === "uz" || langParam === "en"
+      ? langParam
+      : "";
   const destination = searchParams.get("destination")?.trim() || "";
   const startDate = normalizeDate(searchParams.get("startDate"));
   const endDate = normalizeDate(searchParams.get("endDate"));
   const adults = Number(searchParams.get("adults") || 0);
   const type = searchParams.get("type")?.trim() || "";
 
+  const titleColumn = lang
+    ? `COALESCE(NULLIF(title_${lang}, ''), title)`
+    : "title";
+  const countryColumn = lang
+    ? `COALESCE(NULLIF(country_${lang}, ''), country)`
+    : "country";
+  const cityColumn = lang
+    ? `COALESCE(NULLIF(city_${lang}, ''), city)`
+    : "city";
+
   const filters: string[] = [];
   const params: Record<string, string | number> = {};
 
   if (destination) {
     filters.push(
-      "(title LIKE @destination OR country LIKE @destination OR city LIKE @destination)"
+      `(${titleColumn} LIKE @destination OR ${countryColumn} LIKE @destination OR ${cityColumn} LIKE @destination)`
     );
     params.destination = `%${destination}%`;
   }
@@ -59,7 +74,11 @@ export async function GET(request: Request) {
   const db = ensureDatabase();
   const stmt = db.prepare(
     `
-      SELECT id, title, country, city, start_date, end_date, adults_min, adults_max,
+      SELECT id,
+             ${titleColumn} as title,
+             ${countryColumn} as country,
+             ${cityColumn} as city,
+             start_date, end_date, adults_min, adults_max,
              price_from, nights, image_url, is_hot, tour_type, gallery_urls
       FROM tours
       ${whereClause}
