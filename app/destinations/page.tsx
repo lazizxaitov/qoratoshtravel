@@ -17,10 +17,13 @@ export default function DestinationsPage() {
     destination: "",
     startDate: "",
     endDate: "",
-    adults: "2",
+    adults: "",
     nights: "",
   });
   const [availableDates, setAvailableDates] = useState<Set<string> | null>(
+    null
+  );
+  const [highlightDates, setHighlightDates] = useState<Set<string> | null>(
     null
   );
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
@@ -36,6 +39,10 @@ export default function DestinationsPage() {
         days: `${tour.nights} ${locale.search.nightsLabel}`,
         image: tour.image_url,
         people: `${tour.adults_min}-${tour.adults_max}`,
+        adultsMin: tour.adults_min,
+        adultsMax: tour.adults_max,
+        startDate: tour.start_date,
+        endDate: tour.end_date,
       })),
     [locale.search.nightsLabel, locale.search.priceFrom, tours]
   );
@@ -52,13 +59,23 @@ export default function DestinationsPage() {
     setLang(next);
     window.localStorage.setItem("qoratosh-lang", next);
   };
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const query = new URLSearchParams(window.location.search).get("query");
+    if (query) {
+      setFilters((prev) => ({ ...prev, destination: query }));
+    }
+  }, []);
   const allLabel = lang === "uz" ? "Barchasi" : lang === "en" ? "All" : "Все";
-  const adultsOptions: SelectOption[] = ["1", "2", "3", "4", "5", "6"].map(
-    (value) => ({
+  const adultsOptions: SelectOption[] = [
+    { value: "", label: allLabel },
+    ...["1", "2", "3", "4", "5", "6"].map((value) => ({
       value,
       label: value,
-    })
-  );
+    })),
+  ];
   const destinationOptions: SelectOption[] = [
     { value: "", label: allLabel },
     ...Array.from(
@@ -70,6 +87,15 @@ export default function DestinationsPage() {
       ).values()
     ),
   ];
+  const hasCustomDestination =
+    filters.destination &&
+    !destinationOptions.some((option) => option.value === filters.destination);
+  if (hasCustomDestination) {
+    destinationOptions.unshift({
+      value: filters.destination,
+      label: filters.destination,
+    });
+  }
   const maxNights = useMemo(() => {
     return tourCards.reduce((maxValue, tour) => {
       const nightsValue = Number.parseInt(
@@ -113,8 +139,12 @@ export default function DestinationsPage() {
     if (filters.destination) {
       params.set("destination", filters.destination);
     }
+    if (filters.adults) {
+      params.set("adults", filters.adults);
+    }
 
     setAvailableDates(null);
+    setHighlightDates(null);
     fetch(`/api/tours?${params.toString()}`, { signal: controller.signal })
       .then((response) => response.json())
       .then((data) => {
@@ -123,36 +153,34 @@ export default function DestinationsPage() {
         }
         const nextSet = new Set<string>();
         const items = Array.isArray(data?.items) ? data.items : [];
-        items.forEach((tour: { start_date?: string; end_date?: string }) => {
-          if (!tour.start_date || !tour.end_date) {
+        items.forEach((tour: { start_date?: string }) => {
+          if (!tour.start_date) {
             return;
           }
-          const current = new Date(tour.start_date);
-          const last = new Date(tour.end_date);
-          if (Number.isNaN(current.getTime()) || Number.isNaN(last.getTime())) {
+          const startDate = new Date(tour.start_date);
+          if (Number.isNaN(startDate.getTime())) {
             return;
           }
-          while (current <= last) {
-            if (current >= start && current <= end) {
-              nextSet.add(toISO(current));
-            }
-            current.setDate(current.getDate() + 1);
+          if (startDate >= start && startDate <= end) {
+            nextSet.add(toISO(startDate));
           }
         });
         setAvailableDates(nextSet);
+        setHighlightDates(nextSet);
       })
       .catch((error) => {
         if (error?.name === "AbortError") {
           return;
         }
         setAvailableDates(new Set());
+        setHighlightDates(new Set());
       });
 
     return () => {
       isActive = false;
       controller.abort();
     };
-  }, [calendarMonth, filters.destination, lang]);
+  }, [calendarMonth, filters.destination, filters.adults, lang]);
 
   const filteredTours = useMemo(() => {
     const normalized = filters.destination.trim().toLowerCase();
@@ -168,9 +196,25 @@ export default function DestinationsPage() {
       const matchesNights = filters.nights
         ? nightsValue === Number(filters.nights)
         : true;
-      return matchesText && matchesNights;
+      const matchesDates = filters.startDate
+        ? Boolean(
+            tour.startDate &&
+              tour.endDate &&
+              tour.startDate <= filters.startDate &&
+              tour.endDate >= (filters.endDate || filters.startDate)
+          )
+        : true;
+      const matchesAdults = filters.adults
+        ? "adultsMin" in tour &&
+          "adultsMax" in tour &&
+          typeof tour.adultsMin === "number" &&
+          typeof tour.adultsMax === "number" &&
+          Number(filters.adults) >= tour.adultsMin &&
+          Number(filters.adults) <= tour.adultsMax
+        : true;
+      return matchesText && matchesNights && matchesAdults && matchesDates;
     });
-  }, [filters.destination, filters.nights, tourCards]);
+  }, [filters.destination, filters.nights, filters.adults, tourCards]);
 
   return (
     <div className="text-[15px] text-[var(--ink-700)]">
@@ -228,6 +272,7 @@ export default function DestinationsPage() {
                       buttonClassName="h-10 px-3"
                       resetLabel={locale.search.resetLabel}
                       availableDates={availableDates ?? undefined}
+                      highlightDates={highlightDates ?? undefined}
                       onMonthChange={setCalendarMonth}
                     />
                   </div>

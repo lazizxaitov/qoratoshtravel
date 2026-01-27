@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Lang } from "../app/content";
 
 type HeaderLocale = {
@@ -35,11 +36,13 @@ export default function SiteHeader({
 }: SiteHeaderProps) {
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+  const [headerSearchValue, setHeaderSearchValue] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerSearchInputRef = useRef<HTMLInputElement | null>(null);
   const langMenuRef = useRef<HTMLDetailsElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const router = useRouter();
   const flagSrc = (code: string) => `/${code}.png`;
 
   useEffect(() => {
@@ -56,6 +59,17 @@ export default function SiteHeader({
       headerSearchInputRef.current?.focus();
     }
   }, [headerSearchOpen]);
+
+  const handleHeaderSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = headerSearchValue.trim();
+    if (!query) {
+      setHeaderSearchOpen(false);
+      return;
+    }
+    router.push(`/destinations?query=${encodeURIComponent(query)}`);
+    setHeaderSearchOpen(false);
+  };
 
   useEffect(() => {
     function handleHeaderSearchClose(event: MouseEvent) {
@@ -150,11 +164,15 @@ export default function SiteHeader({
           </a>
         </nav>
         <div className="ml-auto hidden items-center gap-4 md:flex">
-          <div className="flex items-center gap-3" data-header-search>
+          <form
+            className="flex items-center gap-3"
+            data-header-search
+            onSubmit={handleHeaderSearchSubmit}
+          >
             <button
               type="button"
               className={`flex h-9 items-center overflow-hidden rounded-full border border-black/10 bg-white text-[var(--ink-700)] transition-all duration-300 ${
-                headerSearchOpen ? "w-44" : "w-9"
+                headerSearchOpen ? "w-36 sm:w-44" : "w-9"
               }`}
               onClick={() => setHeaderSearchOpen((prev) => !prev)}
               aria-label="Search"
@@ -185,6 +203,8 @@ export default function SiteHeader({
                   type="text"
                   placeholder="Поиск"
                   className="ml-2 flex-1 bg-transparent text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-700)] focus:outline-none"
+                  value={headerSearchValue}
+                  onChange={(event) => setHeaderSearchValue(event.target.value)}
                   onClick={(event) => event.stopPropagation()}
                 />
               )}
@@ -194,7 +214,7 @@ export default function SiteHeader({
                 headerSearchOpen ? "w-0 opacity-0" : "w-32 opacity-100"
               }`}
             />
-          </div>
+          </form>
           <details
             ref={langMenuRef}
             className="relative z-40"
