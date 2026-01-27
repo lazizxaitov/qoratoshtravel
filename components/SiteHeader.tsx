@@ -169,15 +169,25 @@ export default function SiteHeader({
             data-header-search
             onSubmit={handleHeaderSearchSubmit}
           >
-            <button
-              type="button"
+            <div
               className={`flex h-9 items-center overflow-hidden rounded-full border border-black/10 bg-white text-[var(--ink-700)] transition-all duration-300 ${
                 headerSearchOpen ? "w-36 sm:w-44" : "w-9"
               }`}
               onClick={() => setHeaderSearchOpen((prev) => !prev)}
-              aria-label="Search"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setHeaderSearchOpen((prev) => !prev);
+                }
+              }}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center">
+              <button
+                type="button"
+                className="flex h-9 w-9 shrink-0 items-center justify-center"
+                aria-label="Search"
+              >
                 <svg
                   aria-hidden="true"
                   className="h-4 w-4"
@@ -196,19 +206,19 @@ export default function SiteHeader({
                     strokeLinecap="round"
                   />
                 </svg>
-              </span>
+              </button>
               {headerSearchOpen && (
                 <input
                   ref={headerSearchInputRef}
                   type="text"
                   placeholder="Поиск"
-                  className="ml-2 flex-1 bg-transparent text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-700)] focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent pr-3 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-700)] focus:outline-none"
                   value={headerSearchValue}
                   onChange={(event) => setHeaderSearchValue(event.target.value)}
                   onClick={(event) => event.stopPropagation()}
                 />
               )}
-            </button>
+            </div>
             <div
               className={`h-2 rounded-full bg-[var(--brand-700)] shadow-sm transition-all duration-300 ${
                 headerSearchOpen ? "w-0 opacity-0" : "w-32 opacity-100"

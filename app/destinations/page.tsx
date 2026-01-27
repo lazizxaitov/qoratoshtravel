@@ -69,6 +69,12 @@ export default function DestinationsPage() {
     }
   }, []);
   const allLabel = lang === "uz" ? "Barchasi" : lang === "en" ? "All" : "Все";
+  const destinationAllLabel =
+    lang === "uz"
+      ? "Barcha yo'nalishlar"
+      : lang === "en"
+      ? "All destinations"
+      : "Все направления";
   const adultsOptions: SelectOption[] = [
     { value: "", label: allLabel },
     ...["1", "2", "3", "4", "5", "6"].map((value) => ({
@@ -77,7 +83,7 @@ export default function DestinationsPage() {
     })),
   ];
   const destinationOptions: SelectOption[] = [
-    { value: "", label: allLabel },
+    { value: "", label: destinationAllLabel },
     ...Array.from(
       new Map(
         tourCards.map((tour) => [
