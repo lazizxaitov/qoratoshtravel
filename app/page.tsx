@@ -201,9 +201,23 @@ export default function Home() {
     return dateFormatter.format(parsed);
   };
   const adultsOptions = ["1", "2", "3", "4", "5", "6"];
-  const destinationOptions: SelectOption[] = Array.from(
-    new Set(tours.map((tour) => tour.title))
-  ).map((value) => ({ value, label: value }));
+  const destinationOptions: SelectOption[] = useMemo(() => {
+    const map = new Map<string, SelectOption>();
+    tours.forEach((tour) => {
+      const country = (tour.country || "").trim();
+      const city = (tour.city || "").trim();
+      const label = [country, city].filter(Boolean).join(" — ");
+      const value = city || country;
+      if (!value) {
+        return;
+      }
+      const key = `${country}|${city}`;
+      if (!map.has(key)) {
+        map.set(key, { value, label: label || value });
+      }
+    });
+    return Array.from(map.values());
+  }, [tours]);
   const adultsSelectOptions: SelectOption[] = [
     { value: "", label: locale.search.peopleValue },
     ...adultsOptions.map((value) => ({
