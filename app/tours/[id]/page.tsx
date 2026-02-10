@@ -176,12 +176,15 @@ export default function TourPage() {
         )
       : (tour as { people?: string } | null)?.people ?? "";
   const gallery = useMemo(() => {
-    const images = [
+    const baseImages = [
       image,
       ...((tour as { gallery_urls?: string[] } | null)?.gallery_urls ?? []),
-      ...locale.hero.slides.map((slide) => slide.image),
     ].filter(Boolean);
-    return Array.from(new Set(images));
+    if (baseImages.length) {
+      return Array.from(new Set(baseImages));
+    }
+    const fallback = locale.hero.slides.map((slide) => slide.image).filter(Boolean);
+    return Array.from(new Set(fallback));
   }, [image, locale.hero.slides, tour]);
 
   useEffect(() => {
