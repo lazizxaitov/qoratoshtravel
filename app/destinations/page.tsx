@@ -34,6 +34,7 @@ export default function DestinationsPage() {
       tours.map((tour) => ({
         id: tour.id,
         title: tour.title,
+        country: tour.country,
         city: tour.city || tour.country,
         price: `${locale.search.priceFrom} ${tour.price_from}$`,
         days: `${tour.nights} ${locale.search.nightsLabel}`,
