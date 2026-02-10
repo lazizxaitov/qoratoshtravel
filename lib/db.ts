@@ -26,6 +26,7 @@ function ensureDatabase(): DbInstance {
     CREATE TABLE IF NOT EXISTS tours (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
       country TEXT NOT NULL,
       city TEXT NOT NULL,
       start_date TEXT NOT NULL,
@@ -46,6 +47,9 @@ function ensureDatabase(): DbInstance {
     .all()
     .map((row) => (row as { name: string }).name);
 
+  if (!existingColumns.includes("description")) {
+    db.exec("ALTER TABLE tours ADD COLUMN description TEXT NOT NULL DEFAULT '';");
+  }
   if (!existingColumns.includes("tour_type")) {
     db.exec("ALTER TABLE tours ADD COLUMN tour_type TEXT NOT NULL DEFAULT 'regular';");
   }
@@ -88,6 +92,9 @@ function ensureDatabase(): DbInstance {
     "title_ru",
     "title_uz",
     "title_en",
+    "description_ru",
+    "description_uz",
+    "description_en",
     "country_ru",
     "country_uz",
     "country_en",
@@ -103,6 +110,9 @@ function ensureDatabase(): DbInstance {
   db.prepare("UPDATE tours SET title_ru = title WHERE title_ru = ''").run();
   db.prepare("UPDATE tours SET title_uz = title WHERE title_uz = ''").run();
   db.prepare("UPDATE tours SET title_en = title WHERE title_en = ''").run();
+  db.prepare("UPDATE tours SET description_ru = description WHERE description_ru = ''").run();
+  db.prepare("UPDATE tours SET description_uz = description WHERE description_uz = ''").run();
+  db.prepare("UPDATE tours SET description_en = description WHERE description_en = ''").run();
   db.prepare("UPDATE tours SET country_ru = country WHERE country_ru = ''").run();
   db.prepare("UPDATE tours SET country_uz = country WHERE country_uz = ''").run();
   db.prepare("UPDATE tours SET country_en = country WHERE country_en = ''").run();

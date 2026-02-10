@@ -31,6 +31,9 @@ export async function GET(request: Request) {
   const titleColumn = lang
     ? `COALESCE(NULLIF(title_${lang}, ''), title)`
     : "title";
+  const descriptionColumn = lang
+    ? `COALESCE(NULLIF(description_${lang}, ''), description)`
+    : "description";
   const countryColumn = lang
     ? `COALESCE(NULLIF(country_${lang}, ''), country)`
     : "country";
@@ -82,6 +85,7 @@ export async function GET(request: Request) {
     `
       SELECT id,
              ${titleColumn} as title,
+             ${descriptionColumn} as description,
              ${countryColumn} as country,
              ${cityColumn} as city,
              start_date, end_date, adults_min, adults_max,

@@ -10,6 +10,10 @@ type TourPayload = {
   title_ru?: string;
   title_uz?: string;
   title_en?: string;
+  description?: string;
+  description_ru?: string;
+  description_uz?: string;
+  description_en?: string;
   country: string;
   country_ru?: string;
   country_uz?: string;
@@ -37,6 +41,11 @@ function normalizeTour(payload: Partial<TourPayload>) {
     payload.title_ru ??
     payload.title_uz ??
     payload.title_en;
+  const description =
+    payload.description ??
+    payload.description_ru ??
+    payload.description_uz ??
+    payload.description_en;
   const country =
     payload.country ??
     payload.country_ru ??
@@ -101,6 +110,7 @@ function normalizeTour(payload: Partial<TourPayload>) {
     : [];
 
   const fallbackTitle = title ?? "";
+  const fallbackDescription = description ?? "";
   const fallbackCountry = country ?? "";
   const fallbackCity = city ?? "";
 
@@ -108,11 +118,15 @@ function normalizeTour(payload: Partial<TourPayload>) {
     data: {
       ...payload,
       title: fallbackTitle,
+      description: fallbackDescription,
       country: fallbackCountry,
       city: fallbackCity,
       title_ru: payload.title_ru ?? fallbackTitle,
       title_uz: payload.title_uz ?? fallbackTitle,
       title_en: payload.title_en ?? fallbackTitle,
+      description_ru: payload.description_ru ?? fallbackDescription,
+      description_uz: payload.description_uz ?? fallbackDescription,
+      description_en: payload.description_en ?? fallbackDescription,
       country_ru: payload.country_ru ?? fallbackCountry,
       country_uz: payload.country_uz ?? fallbackCountry,
       country_en: payload.country_en ?? fallbackCountry,
@@ -140,6 +154,7 @@ export async function GET(request: Request) {
     .prepare(
       `
         SELECT id, title, title_ru, title_uz, title_en,
+               description, description_ru, description_uz, description_en,
                country, country_ru, country_uz, country_en,
                city, city_ru, city_uz, city_en,
                start_date, end_date, adults_min, adults_max,
@@ -185,6 +200,7 @@ export async function POST(request: Request) {
     `
       INSERT INTO tours (
         id, title, title_ru, title_uz, title_en,
+        description, description_ru, description_uz, description_en,
         country, country_ru, country_uz, country_en,
         city, city_ru, city_uz, city_en,
         start_date, end_date,
@@ -192,6 +208,7 @@ export async function POST(request: Request) {
         tour_type, gallery_urls
       ) VALUES (
         @id, @title, @title_ru, @title_uz, @title_en,
+        @description, @description_ru, @description_uz, @description_en,
         @country, @country_ru, @country_uz, @country_en,
         @city, @city_ru, @city_uz, @city_en,
         @start_date, @end_date,
@@ -227,6 +244,10 @@ export async function PUT(request: Request) {
         title_ru = @title_ru,
         title_uz = @title_uz,
         title_en = @title_en,
+        description = @description,
+        description_ru = @description_ru,
+        description_uz = @description_uz,
+        description_en = @description_en,
         country = @country,
         country_ru = @country_ru,
         country_uz = @country_uz,
