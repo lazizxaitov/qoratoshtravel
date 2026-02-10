@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   }
 
   if (startDate && endDate) {
-    filters.push("(start_date <= @startDate AND end_date >= @endDate)");
+    filters.push("(start_date <= @endDate AND end_date >= @startDate)");
     params.startDate = startDate;
     params.endDate = endDate;
   } else if (startDate) {
