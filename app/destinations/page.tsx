@@ -35,6 +35,7 @@ export default function DestinationsPage() {
         id: tour.id,
         title: tour.title,
         country: tour.country,
+        countryLocal: tour.country_local ?? "",
         city: tour.city || tour.country,
         price: `${locale.search.priceFrom} ${tour.price_from}$`,
         days: `${tour.nights} ${locale.search.nightsLabel}`,
@@ -88,7 +89,7 @@ export default function DestinationsPage() {
     ...Array.from(
       new Map(
         tourCards
-          .map((tour) => (tour.country || "").trim())
+          .map((tour) => (tour.countryLocal || "").trim())
           .filter(Boolean)
           .map((country) => [country, { value: country, label: country }])
       ).values()
@@ -192,7 +193,7 @@ export default function DestinationsPage() {
   const filteredTours = useMemo(() => {
     const normalized = filters.destination.trim().toLowerCase();
     return tourCards.filter((tour) => {
-      const country = tour.country.toLowerCase();
+      const country = tour.countryLocal.toLowerCase();
       const matchesText = !normalized || country.includes(normalized);
       const nightsValue = Number.parseInt(
         String(tour.days).match(/\d+/)?.[0] ?? "",

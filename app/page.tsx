@@ -29,6 +29,8 @@ type TourResult = {
   title: string;
   country: string;
   city: string;
+  country_local?: string | null;
+  city_local?: string | null;
   start_date: string;
   end_date: string;
   adults_min: number;
@@ -204,7 +206,7 @@ export default function Home() {
   const destinationOptions: SelectOption[] = useMemo(() => {
     const map = new Map<string, SelectOption>();
     tours.forEach((tour) => {
-      const country = (tour.country || "").trim();
+      const country = (tour.country_local || "").trim();
       if (!country) {
         return;
       }

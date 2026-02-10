@@ -40,6 +40,8 @@ export async function GET(request: Request) {
   const cityColumn = lang
     ? `COALESCE(NULLIF(city_${lang}, ''), city)`
     : "city";
+  const countryLocalColumn = lang ? `NULLIF(country_${lang}, '')` : "country";
+  const cityLocalColumn = lang ? `NULLIF(city_${lang}, '')` : "city";
 
   const filters: string[] = [];
   const params: Record<string, string | number> = {};
@@ -88,6 +90,8 @@ export async function GET(request: Request) {
              ${descriptionColumn} as description,
              ${countryColumn} as country,
              ${cityColumn} as city,
+             ${countryLocalColumn} as country_local,
+             ${cityLocalColumn} as city_local,
              start_date, end_date, adults_min, adults_max,
              price_from, nights, image_url, is_hot, tour_type, gallery_urls
       FROM tours
