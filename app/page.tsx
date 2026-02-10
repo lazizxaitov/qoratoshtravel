@@ -205,19 +205,18 @@ export default function Home() {
     const map = new Map<string, SelectOption>();
     tours.forEach((tour) => {
       const country = (tour.country || "").trim();
-      const city = (tour.city || "").trim();
-      const label = [country, city].filter(Boolean).join(" — ");
-      const value = city || country;
-      if (!value) {
+      if (!country) {
         return;
       }
-      const key = `${country}|${city}`;
-      if (!map.has(key)) {
-        map.set(key, { value, label: label || value });
+      if (!map.has(country)) {
+        map.set(country, { value: country, label: country });
       }
     });
-    return Array.from(map.values());
-  }, [tours]);
+    return [
+      { value: "", label: locale.search.destinationPlaceholder },
+      ...Array.from(map.values()),
+    ];
+  }, [tours, locale.search.destinationPlaceholder]);
   const adultsSelectOptions: SelectOption[] = [
     { value: "", label: locale.search.peopleValue },
     ...adultsOptions.map((value) => ({

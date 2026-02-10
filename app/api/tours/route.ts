@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
   if (destination) {
     filters.push(
-      `(${titleColumn} LIKE @destination OR ${countryColumn} LIKE @destination OR ${cityColumn} LIKE @destination)`
+      `(${countryColumn} LIKE @destination OR ${cityColumn} LIKE @destination)`
     );
     params.destination = `%${destination}%`;
   }

@@ -86,10 +86,10 @@ export default function DestinationsPage() {
     { value: "", label: destinationAllLabel },
     ...Array.from(
       new Map(
-        tourCards.map((tour) => [
-          tour.title,
-          { value: tour.title, label: tour.title },
-        ])
+        tourCards
+          .map((tour) => (tour.country || "").trim())
+          .filter(Boolean)
+          .map((country) => [country, { value: country, label: country }])
       ).values()
     ),
   ];
@@ -191,10 +191,8 @@ export default function DestinationsPage() {
   const filteredTours = useMemo(() => {
     const normalized = filters.destination.trim().toLowerCase();
     return tourCards.filter((tour) => {
-      const title = tour.title.toLowerCase();
-      const city = tour.city.toLowerCase();
-      const matchesText =
-        !normalized || title.includes(normalized) || city.includes(normalized);
+      const country = tour.country.toLowerCase();
+      const matchesText = !normalized || country.includes(normalized);
       const nightsValue = Number.parseInt(
         String(tour.days).match(/\d+/)?.[0] ?? "",
         10
